@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${JIFELOG_DB_HOST}/${JIFELOG_DB_NAME}
+    username: ${JIFELOG_DB_USER}
+    password: ${JIFELOG_DB_PASSWORD}
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.orm.jdbc.bind: trace
