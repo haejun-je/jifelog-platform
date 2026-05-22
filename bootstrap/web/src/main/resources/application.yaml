@@ -3,7 +3,13 @@ spring:
     name: jifelog-platform
   config:
     import:
-      - "optional:classpath:domain-application.yaml"
+      - "optional:classpath:core-application.yaml"
+
+jifelog:
+  security:
+    jwt:
+      secret: ${JIFELOG_JWT_SECRET}
+
 
 management:
   endpoint:
@@ -14,3 +20,5 @@ management:
     web:
       exposure:
         include: health
+server:
+  port: 8082

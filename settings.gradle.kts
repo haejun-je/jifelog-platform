@@ -8,7 +8,7 @@ dependencyResolutionManagement {
 
 include(
     "common",
-    "domain",
+    "core",
     "bootstrap:web",
     "bootstrap:scheduler",
     "bootstrap:kafka"
