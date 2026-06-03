@@ -31,7 +31,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
 
-    implementation("com.jifelog.platform:jifelog-security-jwt-starter:0.1.0")
+    implementation("com.jifelog.platform:jifelog-security-jwt-starter:0.1.1")
 
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
     testImplementation("org.springframework.boot:spring-boot-starter-security-test")
