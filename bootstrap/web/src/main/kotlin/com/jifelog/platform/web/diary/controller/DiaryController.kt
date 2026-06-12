@@ -7,6 +7,8 @@ import com.jifelog.security.jwt.api.JifelogUser
 import com.jifelog.security.jwt.api.JifelogUserData
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
+import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -23,6 +25,7 @@ class DiaryController(
     @PostMapping(version = "1")
     fun create(
         @JifelogUser jifelogUser: JifelogUserData,
+        @PathVariable version: String,
         @Valid @RequestBody request: CreateDiaryRequest,
     ): ResponseEntity<CreateDiaryResponse> {
         val id = diaryCommandUseCase.create(
@@ -30,7 +33,17 @@ class DiaryController(
         )
 
         return ResponseEntity
-            .created(URI.create("/{version}/diaries/$id"))
+            .created(URI.create("/$version/diaries/$id"))
             .body(CreateDiaryResponse(id))
+    }
+
+    @DeleteMapping("/{id}", version = "1")
+    fun delete(
+        @JifelogUser jifelogUser: JifelogUserData,
+        @PathVariable version: String,
+        @PathVariable id: UUID,
+    ): ResponseEntity<Void> {
+        diaryCommandUseCase.delete(id, UUID.fromString(jifelogUser.userId))
+        return ResponseEntity.noContent().build()
     }
 }

@@ -18,7 +18,7 @@ import java.util.*
 @Entity
 @Table(
     schema = "diary",
-    name = "diary",
+    name = "diary_entry",
     uniqueConstraints = [
         UniqueConstraint(
             name = "uq_user_entry_date",

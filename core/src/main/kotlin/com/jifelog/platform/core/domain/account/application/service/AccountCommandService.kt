@@ -1,5 +1,7 @@
 package com.jifelog.platform.core.domain.account.application.service
 
+import com.jifelog.platform.common.exception.BusinessException
+import com.jifelog.platform.common.exception.ErrorCode
 import com.jifelog.platform.core.domain.account.application.port.`in`.AccountCommandUseCase
 import com.jifelog.platform.core.domain.account.application.port.`in`.CreateAccountCommand
 import com.jifelog.platform.core.domain.account.application.port.out.SaveUserPort
@@ -15,8 +17,8 @@ class AccountCommandService(
 ) : AccountCommandUseCase {
 
     override fun create(command: CreateAccountCommand): UUID {
-        check(!saveUserPort.existsByNickname(command.nickname)) {
-            "nickname already exists: ${command.nickname}"
+        if (saveUserPort.existsByNickname(command.nickname)) {
+            throw BusinessException(ErrorCode.EC_01_001)
         }
         val user = User.withoutId(
             nickname = command.nickname,
