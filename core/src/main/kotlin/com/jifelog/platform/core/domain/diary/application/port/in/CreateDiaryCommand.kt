@@ -13,7 +13,7 @@ data class CreateDiaryCommand(
     val energyLevel: Short,
     val satisfactionLevel: Short,
     val keywords: List<String>,
-    val achievement: String,
-    val regret: String,
+    val achievement: List<String>,
+    val regret: List<String>,
     val content: String,
 )

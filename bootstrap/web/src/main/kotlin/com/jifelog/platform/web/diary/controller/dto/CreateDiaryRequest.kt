@@ -30,11 +30,11 @@ data class CreateDiaryRequest(
     @field:Size(max = 10, message = "keywords must be at most 10 items")
     val keywords: List<@Size(max = 50, message = "each keyword must be at most 50 characters") String> = emptyList(),
 
-    @field:Size(max = 1000, message = "achievement must be at most 1000 characters")
-    val achievement: String = "",
+    @field:Size(max = 3, message = "achievement must be at most 3 items")
+    val achievement: List<@Size(max = 100, message = "each achievement must be at most 100 characters") String> = emptyList(),
 
-    @field:Size(max = 1000, message = "regret must be at most 1000 characters")
-    val regret: String = "",
+    @field:Size(max = 3, message = "regret must be at most 3 items")
+    val regret: List<@Size(max = 100, message = "each regret must be at most 100 characters") String> = emptyList(),
 
     @field:NotBlank
     val content: String,

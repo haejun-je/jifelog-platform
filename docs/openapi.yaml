@@ -1,0 +1,427 @@
+openapi: 3.1.0
+info:
+  title: Jifelog Platform - Diary API
+  description: |
+    지플로그(Jifelog) 플랫폼의 일기(Diary) 도메인 API 문서입니다.
+
+    ## 인증
+    모든 일기 API는 JWT Bearer 토큰 인증이 필요합니다.
+    요청 헤더에 `Authorization: Bearer <token>` 형식으로 전달해야 합니다.
+
+    ## 버전 관리
+    API 경로의 `{version}` 세그먼트로 버전을 지정합니다.
+    현재 지원 버전: `v1`, `v2` (기본값: `v1`)
+
+    ## 에러 코드 규칙
+    `E[Category]_[Domain]_[Seq]` 형식을 따릅니다.
+    - Category: B=400, U=401, F=403, N=404, C=409, S=500
+    - Domain: 00=공통, 01=계정, 02=일기
+  version: 1.0.0
+  contact:
+    name: Jifelog Team
+
+servers:
+  - url: https://api.jifelog.com
+    description: Production
+  - url: http://localhost:8080
+    description: Local development
+
+tags:
+  - name: Diary
+    description: 일기 관리 API
+
+security:
+  - BearerAuth: []
+
+paths:
+  /{version}/diaries:
+    post:
+      operationId: createDiary
+      summary: 일기 작성
+      description: |
+        새로운 일기를 작성합니다.
+
+        - 같은 날짜(`entry_date`)에 이미 일기가 존재하면 409 Conflict 에러가 발생합니다.
+        - 작성 성공 시 `Location` 헤더에 생성된 일기의 경로가 포함됩니다.
+      tags: [Diary]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDiaryRequest'
+            examples:
+              happy_sunny_day:
+                summary: 맑고 행복한 날
+                value:
+                  entry_date: "2026-06-13"
+                  mood: HAPPY
+                  weather: SUNNY
+                  energy_level: 4
+                  satisfaction_level: 5
+                  keywords:
+                    - 산책
+                    - 독서
+                  achievement:
+                    - 프로젝트 완료
+                    - 아침 운동
+                  regret:
+                    - 운동을 못함
+                  content: "오늘은 정말 좋은 하루였다."
+              tired_rainy_day:
+                summary: 비오고 피곤한 날
+                value:
+                  entry_date: "2026-06-12"
+                  mood: TIRED
+                  weather: RAIN
+                  energy_level: 2
+                  satisfaction_level: 2
+                  keywords:
+                    - 휴식
+                  achievement: []
+                  regret:
+                    - 너무 많이 잤다
+                  content: "비가 와서 하루 종일 집에 있었다."
+      responses:
+        "201":
+          description: 일기 작성 성공
+          headers:
+            Location:
+              description: 생성된 일기 리소스 경로
+              schema:
+                type: string
+                example: /v1/diaries/550e8400-e29b-41d4-a716-446655440000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateDiaryResponse'
+        "400":
+          description: 잘못된 요청 (유효성 검증 실패 또는 요청 본문 파싱 오류)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                validation_error:
+                  summary: 유효성 검증 실패
+                  value:
+                    data:
+                      error_code: EB_00_001
+                      message: "요청 값이 올바르지 않습니다."
+                      details:
+                        - field: "content"
+                          message: "must not be blank"
+                        - field: "energy_level"
+                          message: "must be between 1 and 5"
+                malformed_request:
+                  summary: 요청 본문 파싱 오류
+                  value:
+                    data:
+                      error_code: EB_00_002
+                      message: "요청을 읽을 수 없습니다."
+                      details: null
+        "401":
+          description: 인증 실패 (JWT 토큰 누락 또는 만료)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                data:
+                  error_code: "EU_00_001"
+                  message: "인증이 필요합니다."
+                  details: null
+        "409":
+          description: 해당 날짜에 이미 작성된 일기가 존재함
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                data:
+                  error_code: EC_02_001
+                  message: "이미 작성된 일기가 존재합니다."
+                  details: null
+        "500":
+          description: 서버 내부 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                data:
+                  error_code: ES_00_001
+                  message: "서버 오류가 발생했습니다."
+                  details: null
+
+  /{version}/diaries/{id}:
+    delete:
+      operationId: deleteDiary
+      summary: 일기 삭제
+      description: |
+        지정한 ID의 일기를 삭제합니다.
+
+        - 본인이 작성한 일기만 삭제할 수 있습니다.
+        - 존재하지 않는 일기 ID이거나 다른 사용자의 일기인 경우 404 Not Found 에러가 발생합니다.
+      tags: [Diary]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+        - $ref: '#/components/parameters/DiaryId'
+      responses:
+        "204":
+          description: 일기 삭제 성공 (응답 본문 없음)
+        "401":
+          description: 인증 실패 (JWT 토큰 누락 또는 만료)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                data:
+                  error_code: "EU_00_001"
+                  message: "인증이 필요합니다."
+                  details: null
+        "404":
+          description: 일기를 찾을 수 없음 (존재하지 않는 ID 또는 다른 사용자의 일기)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                data:
+                  error_code: EN_02_001
+                  message: "존재하지 않는 일기입니다."
+                  details: null
+        "500":
+          description: 서버 내부 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                data:
+                  error_code: ES_00_001
+                  message: "서버 오류가 발생했습니다."
+                  details: null
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT Bearer 토큰 인증.
+        `Authorization: Bearer <token>` 형식으로 전달합니다.
+
+  parameters:
+    ApiVersion:
+      name: version
+      in: path
+      required: true
+      description: |
+        API 버전 세그먼트입니다.
+        - `v1`: 현재 안정 버전
+        - `v2`: 지원 예정
+      schema:
+        type: string
+        enum: [v1, v2]
+        default: v1
+      examples:
+        v1:
+          value: v1
+          summary: 버전 1 (현재 안정 버전)
+
+    DiaryId:
+      name: id
+      in: path
+      required: true
+      description: 일기 고유 식별자 (UUID)
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+
+  schemas:
+    CreateDiaryRequest:
+      type: object
+      description: 일기 작성 요청 본문
+      required:
+        - entry_date
+        - mood
+        - weather
+        - energy_level
+        - satisfaction_level
+        - content
+      properties:
+        entry_date:
+          type: string
+          format: date
+          description: 일기 날짜 (같은 날짜에 중복 작성 불가)
+          example: "2026-06-13"
+        mood:
+          $ref: '#/components/schemas/Mood'
+        weather:
+          $ref: '#/components/schemas/Weather'
+        energy_level:
+          type: integer
+          format: int16
+          description: 에너지 레벨 (1~5)
+          minimum: 1
+          maximum: 5
+          example: 4
+        satisfaction_level:
+          type: integer
+          format: int16
+          description: 만족도 레벨 (1~5)
+          minimum: 1
+          maximum: 5
+          example: 5
+        keywords:
+          type: array
+          description: |
+            오늘을 나타내는 키워드 목록
+            - 최대 10개까지 등록 가능
+            - 각 키워드는 최대 50자
+          items:
+            type: string
+            maxLength: 50
+          maxItems: 10
+          default: []
+          example:
+            - 산책
+            - 독서
+            - 코딩
+        achievement:
+          type: array
+          description: |
+            오늘 한 잘한일 목록
+            - 최대 3개까지 등록 가능
+            - 각 항목은 최대 100자
+          items:
+            type: string
+            maxLength: 100
+          maxItems: 3
+          default: []
+          example:
+            - 프로젝트 완료
+            - 아침 운동
+        regret:
+          type: array
+          description: |
+            오늘의 아쉬운일 목록
+            - 최대 3개까지 등록 가능
+            - 각 항목은 최대 100자
+          items:
+            type: string
+            maxLength: 100
+          maxItems: 3
+          default: []
+          example:
+            - 운동을 못함
+            - 늦잠
+        content:
+          type: string
+          description: 일기 본문 내용
+          minLength: 1
+          example: "오늘은 정말 좋은 하루였다."
+
+    CreateDiaryResponse:
+      type: object
+      description: 일기 작성 성공 응답
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: 생성된 일기의 고유 식별자
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    Mood:
+      type: string
+      description: 오늘의 기분
+      enum:
+        - HAPPY
+        - EXCITED
+        - NEUTRAL
+        - SAD
+        - ANGRY
+        - ANXIOUS
+        - TIRED
+      x-enum-descriptions:
+        HAPPY: 행복
+        EXCITED: 신남
+        NEUTRAL: 보통
+        SAD: 슬픔
+        ANGRY: 화남
+        ANXIOUS: 불안
+        TIRED: 피곤
+
+    Weather:
+      type: string
+      description: 오늘의 날씨
+      enum:
+        - SUNNY
+        - CLOUDY
+        - RAIN
+        - SNOW
+        - HAIL
+        - TYPHOON
+      x-enum-descriptions:
+        SUNNY: 맑음
+        CLOUDY: 흐림
+        RAIN: 비
+        SNOW: 눈
+        HAIL: 우박
+        TYPHOON: 태풍
+
+    ApiErrorResponse:
+      type: object
+      description: API 에러 공통 응답 형식
+      properties:
+        data:
+          $ref: '#/components/schemas/ErrorBody'
+
+    ErrorBody:
+      type: object
+      description: 에러 상세 정보
+      properties:
+        error_code:
+          type: string
+          description: |
+            에러 코드 (`E[Category]_[Domain]_[Seq]` 형식)
+
+            | 코드 | HTTP 상태 | 설명 |
+            |------|----------|------|
+            | EB_00_001 | 400 | 요청 값이 올바르지 않음 (유효성 검증 실패) |
+            | EB_00_002 | 400 | 요청 본문을 읽을 수 없음 (파싱 오류) |
+            | EN_02_001 | 404 | 존재하지 않는 일기 |
+            | EC_02_001 | 409 | 이미 작성된 일기가 존재함 |
+            | ES_00_001 | 500 | 서버 내부 오류 |
+          example: EN_02_001
+        message:
+          type: string
+          description: 에러 메시지
+          example: "존재하지 않는 일기입니다."
+        details:
+          description: |
+            에러 상세 정보 목록 (유효성 검증 실패 시 필드별 오류 제공, 그 외에는 null)
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ValidationErrorDetail'
+          example: null
+
+    ValidationErrorDetail:
+      type: object
+      description: 유효성 검증 오류 상세 정보
+      properties:
+        field:
+          type: string
+          description: 유효성 검증에 실패한 필드명
+          example: "content"
+        message:
+          type: string
+          description: 유효성 검증 실패 메시지
+          example: "must not be blank"
