@@ -1,6 +1,7 @@
 package com.jifelog.platform.core.domain.account.application.service
 
-import com.jifelog.platform.core.domain.account.application.port.`in`.AccountNotFoundException
+import com.jifelog.platform.common.exception.BusinessException
+import com.jifelog.platform.common.exception.ErrorCode
 import com.jifelog.platform.core.domain.account.application.port.`in`.AccountQueryUseCase
 import com.jifelog.platform.core.domain.account.application.port.out.LoadUserPort
 import com.jifelog.platform.core.domain.account.model.User
@@ -15,5 +16,5 @@ class AccountQueryService(
 ) : AccountQueryUseCase {
 
     override fun getMe(userId: UUID): User =
-        loadUserPort.loadUser(userId) ?: throw AccountNotFoundException(userId)
+        loadUserPort.loadUser(userId) ?: throw BusinessException(ErrorCode.EN_01_001)
 }
