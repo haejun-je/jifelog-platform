@@ -4,7 +4,8 @@ spring:
   config:
     import:
       - "optional:classpath:core-application.yaml"
-
+  jackson:
+    property-naming-strategy: SNAKE_CASE
 jifelog:
   security:
     jwt:

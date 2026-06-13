@@ -54,11 +54,13 @@ class DiaryEntity(
     @Column(name = "keywords", nullable = false, columnDefinition = "varchar(50)[]")
     var keywords: List<String> = emptyList(),
 
-    @Column(nullable = false)
-    var achievement: String = "",
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "achievement", nullable = false, columnDefinition = "varchar(100)[]")
+    var achievement: List<String> = emptyList(),
 
-    @Column(nullable = false)
-    var regret: String = "",
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "regret", nullable = false, columnDefinition = "varchar(100)[]")
+    var regret: List<String> = emptyList(),
 
     @Column(nullable = false, columnDefinition = "TEXT")
     var content: String,
