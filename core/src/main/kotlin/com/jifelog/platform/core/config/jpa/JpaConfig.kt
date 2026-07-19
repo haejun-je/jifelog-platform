@@ -1,4 +1,4 @@
-package com.jifelog.platform.core.config
+package com.jifelog.platform.core.config.jpa
 
 import org.springframework.boot.persistence.autoconfigure.EntityScan
 import org.springframework.context.annotation.Configuration

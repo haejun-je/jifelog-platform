@@ -17,10 +17,16 @@ class GlobalExceptionHandler {
     private val log = LoggerFactory.getLogger(this::class.java)
 
     @ExceptionHandler(BusinessException::class)
-    fun handleBusinessException(ex: BusinessException): ResponseEntity<ApiErrorResponse> =
-        ResponseEntity
+    fun handleBusinessException(ex: BusinessException): ResponseEntity<ApiErrorResponse> {
+        if (ex.errorCode.status.code >= 500) {
+            log.error("BusinessException code={} message={}", ex.errorCode.name, ex.message, ex)
+        } else {
+            log.warn("BusinessException code={} message={}", ex.errorCode.name, ex.message)
+        }
+        return ResponseEntity
             .status(ex.errorCode.status.toHttpStatus())
             .body(ApiErrorResponse.of(ex.errorCode, ex.message ?: ex.errorCode.defaultMessage, ex.details))
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidation(ex: MethodArgumentNotValidException): ResponseEntity<ApiErrorResponse> {
@@ -37,7 +43,7 @@ class GlobalExceptionHandler {
         log.warn("Malformed request body", ex)
         return ResponseEntity
             .badRequest()
-            .body(ApiErrorResponse.of(ErrorCode.EB_00_002))
+            .body(ApiErrorResponse.of(errorCode = ErrorCode.EB_00_002))
     }
 
     @ExceptionHandler(Exception::class)

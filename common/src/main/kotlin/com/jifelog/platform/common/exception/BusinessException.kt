@@ -4,4 +4,5 @@ class BusinessException(
     val errorCode: ErrorCode,
     message: String = errorCode.defaultMessage,
     val details: List<Any>? = null,
-) : RuntimeException(message)
+    cause: Throwable? = null,
+) : RuntimeException(message, cause)

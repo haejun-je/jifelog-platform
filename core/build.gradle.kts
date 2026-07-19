@@ -18,6 +18,7 @@ dependencies {
 
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("com.fasterxml.uuid:java-uuid-generator:5.2.0")
+    implementation("io.minio:minio:9.0.3")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

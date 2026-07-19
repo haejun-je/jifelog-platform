@@ -17,7 +17,7 @@ import java.net.URI
 import java.util.UUID
 
 @RestController
-@RequestMapping("/{version}/accounts")
+@RequestMapping("/accounts")
 class AccountController(
     private val accountCommandUseCase: AccountCommandUseCase,
     private val accountQueryUseCase: AccountQueryUseCase,
@@ -28,7 +28,7 @@ class AccountController(
         val id = accountCommandUseCase.create(request.toCommand())
 
         return ResponseEntity
-            .created(URI.create("/{version}/accounts/$id"))
+            .created(URI.create("/api/v1/accounts/$id"))
             .body(CreateAccountResponse(id))
     }
 

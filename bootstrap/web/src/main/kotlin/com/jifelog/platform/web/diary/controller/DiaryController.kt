@@ -17,7 +17,7 @@ import java.net.URI
 import java.util.UUID
 
 @RestController
-@RequestMapping("/{version}/diaries")
+@RequestMapping("/diaries")
 class DiaryController(
     private val diaryCommandUseCase: DiaryCommandUseCase,
 ) {
@@ -25,7 +25,6 @@ class DiaryController(
     @PostMapping(version = "1")
     fun create(
         @JifelogUser jifelogUser: JifelogUserData,
-        @PathVariable version: String,
         @Valid @RequestBody request: CreateDiaryRequest,
     ): ResponseEntity<CreateDiaryResponse> {
         val id = diaryCommandUseCase.create(
@@ -33,14 +32,13 @@ class DiaryController(
         )
 
         return ResponseEntity
-            .created(URI.create("/$version/diaries/$id"))
+            .created(URI.create("/api/v1/diaries/$id"))
             .body(CreateDiaryResponse(id))
     }
 
     @DeleteMapping("/{id}", version = "1")
     fun delete(
         @JifelogUser jifelogUser: JifelogUserData,
-        @PathVariable version: String,
         @PathVariable id: UUID,
     ): ResponseEntity<Void> {
         diaryCommandUseCase.delete(id, UUID.fromString(jifelogUser.userId))
