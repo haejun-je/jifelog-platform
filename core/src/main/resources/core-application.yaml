@@ -1,8 +1,18 @@
 spring:
   datasource:
     url: jdbc:postgresql://${JIFELOG_DB_HOST}/${JIFELOG_DB_NAME}
+    #url: jdbc:postgresql://localhost:5432/local-jifelog
     username: ${JIFELOG_DB_USER}
+    #username: je
     password: ${JIFELOG_DB_PASSWORD}
+    #password: 123qweasdzxc
+minio:
+  endpoint: http://10.25.0.54:9000
+  access-key: minio
+  secret-key: 93Jetjqj!#%
+  bucket: jifelog-dev
+  presigned-url-expiry-minutes: 15
+
 logging:
   level:
     org.hibernate.SQL: debug
