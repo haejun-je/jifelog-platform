@@ -2,7 +2,7 @@ package com.jifelog.platform.core.domain.storage.infrastructure.adapter
 
 import com.jifelog.platform.core.domain.storage.application.port.`in`.UploadUrlResult
 import com.jifelog.platform.core.domain.storage.application.port.out.GenerateUploadUrlPort
-import com.jifelog.platform.core.config.minio.MinioProperties
+import com.jifelog.platform.core.config.minio.properties.MinioProperties
 import io.minio.GetPresignedObjectUrlArgs
 import io.minio.Http
 import io.minio.MinioClient
