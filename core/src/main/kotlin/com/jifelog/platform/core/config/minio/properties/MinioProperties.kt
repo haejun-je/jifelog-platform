@@ -1,4 +1,4 @@
-package com.jifelog.platform.core.config.minio
+package com.jifelog.platform.core.config.minio.properties
 
 import org.springframework.boot.context.properties.ConfigurationProperties
 
