@@ -8,7 +8,7 @@ minio:
   endpoint: https://minio.jifelog.com:9000
   access-key: ${JIFELOG_MINIO_ACCESS_KEY}
   secret-key: ${JIFELOG_MINIO_SECRET_KEY}
-  bucket: ${JIFELOG_MINIO_BUKET}
+  bucket: ${JIFELOG_MINIO_BUCKET}
   presigned-url-expiry-minutes: 15
 
 logging:

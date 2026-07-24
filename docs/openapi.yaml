@@ -23,7 +23,7 @@ info:
 servers:
   - url: https://api.jifelog.com
     description: Production
-  - url: http://localhost:8082
+  - url: http://localhost:8080
     description: Local development
 
 tags:

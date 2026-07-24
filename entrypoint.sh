@@ -16,6 +16,9 @@ need_file /etc/secrets/JIFELOG_REDIS_HOST
 need_file /etc/secrets/JIFELOG_REDIS_PASSWORD
 need_file /etc/secrets/JIFELOG_MAIL_API_KEY
 need_file /etc/secrets/JIFELOG_JWT_SECRET
+need_file /etc/secrets/JIFELOG_MINIO_ACCESS_KEY
+need_file /etc/secrets/JIFELOG_MINIO_SECRET_KEY
+need_file /etc/secrets/JIFELOG_MINIO_BUCKET
 
 export JIFELOG_DB_HOST="$(tr -d '\r\n' <  /etc/secrets/JIFELOG_DB_HOST)"
 export JIFELOG_DB_NAME="$(tr -d '\r\n' <  /etc/secrets/JIFELOG_DB_NAME)"
@@ -25,5 +28,8 @@ export JIFELOG_REDIS_HOST="$(tr -d '\r\n' <  /etc/secrets/JIFELOG_REDIS_HOST)"
 export JIFELOG_REDIS_PASSWORD="$(tr -d '\r\n' <  /etc/secrets/JIFELOG_REDIS_PASSWORD)"
 export JIFELOG_MAIL_API_KEY="$(tr -d '\r\n' <  /etc/secrets/JIFELOG_MAIL_API_KEY)"
 export JIFELOG_JWT_SECRET="$(tr -d '\r\n' <  /etc/secrets/JIFELOG_JWT_SECRET)"
+export JIFELOG_MINIO_ACCESS_KEY="$(tr -d '\r\n' <  /etc/secrets/JIFELOG_MINIO_ACCESS_KEY)"
+export JIFELOG_MINIO_SECRET_KEY="$(tr -d '\r\n' <  /etc/secrets/JIFELOG_MINIO_SECRET_KEY)"
+export JIFELOG_MINIO_BUCKET="$(tr -d '\r\n' <  /etc/secrets/JIFELOG_MINIO_BUCKET)"
 
 exec java -jar /app/app.jar

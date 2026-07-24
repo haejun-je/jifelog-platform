@@ -9,7 +9,7 @@ dependencyResolutionManagement {
 include(
     "common",
     "core",
-    "bootstrap:web",
+    "bootstrap:api",
     "bootstrap:scheduler",
     "bootstrap:kafka"
 )
