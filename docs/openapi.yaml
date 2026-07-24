@@ -1,12 +1,12 @@
 openapi: 3.1.0
 info:
-  title: Jifelog Platform - Diary API
+  title: Jifelog Platform API
   description: |
-    지플로그(Jifelog) 플랫폼의 일기(Diary) 도메인 API 문서입니다.
+    지플로그(Jifelog) 플랫폼 API 문서입니다.
 
     ## 인증
-    모든 일기 API는 JWT Bearer 토큰 인증이 필요합니다.
-    요청 헤더에 `Authorization: Bearer <token>` 형식으로 전달해야 합니다.
+    인증이 필요한 API는 `X-Jifelog-JWT` 요청 헤더에 JWT 토큰을 직접 전달합니다.
+    (`Authorization: Bearer` 헤더를 사용하지 않습니다.)
 
     ## 버전 관리
     API 경로의 `{version}` 세그먼트로 버전을 지정합니다.
@@ -15,7 +15,7 @@ info:
     ## 에러 코드 규칙
     `E[Category]_[Domain]_[Seq]` 형식을 따릅니다.
     - Category: B=400, U=401, F=403, N=404, C=409, S=500
-    - Domain: 00=공통, 01=계정, 02=일기
+    - Domain: 00=공통, 01=계정, 02=일기, 03=스토리지
   version: 1.0.0
   contact:
     name: Jifelog Team
@@ -23,24 +23,153 @@ info:
 servers:
   - url: https://api.jifelog.com
     description: Production
-  - url: http://localhost:8080
+  - url: http://localhost:8082
     description: Local development
 
 tags:
+  - name: Account
+    description: 계정 관리 API
   - name: Diary
     description: 일기 관리 API
-
-security:
-  - BearerAuth: []
+  - name: DiaryPhoto
+    description: 일기 사진 업로드 API
 
 paths:
-  /{version}/diaries:
+  /api/{version}/accounts:
+    post:
+      operationId: createAccount
+      summary: 계정 생성
+      description: |
+        새로운 계정을 생성합니다.
+
+        - 인증이 필요하지 않은 공개 엔드포인트입니다.
+        - 이미 사용 중인 닉네임인 경우 409 Conflict 에러가 발생합니다.
+        - 작성 성공 시 `Location` 헤더에 생성된 계정의 경로가 포함됩니다.
+      tags: [Account]
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountRequest'
+            examples:
+              basic:
+                summary: 기본 계정 생성
+                value:
+                  nickname: "지플로거"
+                  profile_img: ""
+      responses:
+        "201":
+          description: 계정 생성 성공
+          headers:
+            Location:
+              description: 생성된 계정 리소스 경로
+              schema:
+                type: string
+                example: /api/v1/accounts/550e8400-e29b-41d4-a716-446655440000
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateAccountResponse'
+        "400":
+          description: 잘못된 요청 (유효성 검증 실패 또는 요청 본문 파싱 오류)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                validation_error:
+                  summary: 유효성 검증 실패
+                  value:
+                    data:
+                      error_code: EB_00_001
+                      message: "요청 값이 올바르지 않습니다."
+                      details:
+                        - field: "nickname"
+                          message: "nickname must be 1..50 characters"
+                malformed_request:
+                  summary: 요청 본문 파싱 오류
+                  value:
+                    data:
+                      error_code: EB_00_002
+                      message: "요청을 읽을 수 없습니다."
+                      details: null
+        "409":
+          description: 이미 사용 중인 닉네임
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                data:
+                  error_code: EC_01_001
+                  message: "이미 사용 중인 닉네임입니다."
+                  details: null
+        "500":
+          description: 서버 내부 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                data:
+                  error_code: ES_00_001
+                  message: "서버 오류가 발생했습니다."
+                  details: null
+
+  /api/{version}/accounts/me:
+    get:
+      operationId: getAccountMe
+      summary: 내 계정 조회
+      description: |
+        인증된 사용자 본인의 계정 정보를 조회합니다.
+
+        - `X-Jifelog-JWT` 헤더로 인증이 필요합니다.
+        - 인증된 사용자의 계정이 존재하지 않으면 404 Not Found 에러가 발생합니다.
+      tags: [Account]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        "200":
+          description: 계정 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountMeResponse'
+        "404":
+          description: 인증된 사용자의 계정을 찾을 수 없음
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                data:
+                  error_code: EN_01_001
+                  message: "존재하지 않는 계정입니다."
+                  details: null
+        "500":
+          description: 서버 내부 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                data:
+                  error_code: ES_00_001
+                  message: "서버 오류가 발생했습니다."
+                  details: null
+
+  /api/{version}/diaries:
     post:
       operationId: createDiary
       summary: 일기 작성
       description: |
         새로운 일기를 작성합니다.
 
+        - `X-Jifelog-JWT` 헤더로 인증이 필요합니다.
         - 같은 날짜(`entry_date`)에 이미 일기가 존재하면 409 Conflict 에러가 발생합니다.
         - 작성 성공 시 `Location` 헤더에 생성된 일기의 경로가 포함됩니다.
       tags: [Diary]
@@ -92,7 +221,7 @@ paths:
               description: 생성된 일기 리소스 경로
               schema:
                 type: string
-                example: /v1/diaries/550e8400-e29b-41d4-a716-446655440000
+                example: /api/v1/diaries/550e8400-e29b-41d4-a716-446655440000
           content:
             application/json:
               schema:
@@ -122,17 +251,6 @@ paths:
                       error_code: EB_00_002
                       message: "요청을 읽을 수 없습니다."
                       details: null
-        "401":
-          description: 인증 실패 (JWT 토큰 누락 또는 만료)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-              example:
-                data:
-                  error_code: "EU_00_001"
-                  message: "인증이 필요합니다."
-                  details: null
         "409":
           description: 해당 날짜에 이미 작성된 일기가 존재함
           content:
@@ -156,13 +274,14 @@ paths:
                   message: "서버 오류가 발생했습니다."
                   details: null
 
-  /{version}/diaries/{id}:
+  /api/{version}/diaries/{id}:
     delete:
       operationId: deleteDiary
       summary: 일기 삭제
       description: |
         지정한 ID의 일기를 삭제합니다.
 
+        - `X-Jifelog-JWT` 헤더로 인증이 필요합니다.
         - 본인이 작성한 일기만 삭제할 수 있습니다.
         - 존재하지 않는 일기 ID이거나 다른 사용자의 일기인 경우 404 Not Found 에러가 발생합니다.
       tags: [Diary]
@@ -172,17 +291,6 @@ paths:
       responses:
         "204":
           description: 일기 삭제 성공 (응답 본문 없음)
-        "401":
-          description: 인증 실패 (JWT 토큰 누락 또는 만료)
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiErrorResponse'
-              example:
-                data:
-                  error_code: "EU_00_001"
-                  message: "인증이 필요합니다."
-                  details: null
         "404":
           description: 일기를 찾을 수 없음 (존재하지 않는 ID 또는 다른 사용자의 일기)
           content:
@@ -206,15 +314,108 @@ paths:
                   message: "서버 오류가 발생했습니다."
                   details: null
 
+  /api/{version}/diaries/photos/upload-urls:
+    post:
+      operationId: generateDiaryPhotoUploadUrl
+      summary: 일기 사진 업로드 URL 생성
+      description: |
+        일기 사진 업로드를 위한 Presigned URL을 생성합니다.
+
+        - `X-Jifelog-JWT` 헤더로 인증이 필요합니다.
+        - 허용 콘텐츠 타입: `image/jpeg`, `image/png`, `image/webp`, `image/gif`
+        - 지원하지 않는 콘텐츠 타입인 경우 400 Bad Request 에러가 발생합니다.
+        - 응답의 `upload_url`은 만료 시간이 존재하며, `expires_at` 이전에 업로드해야 합니다.
+      tags: [DiaryPhoto]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateUploadUrlRequest'
+            examples:
+              jpeg_upload:
+                summary: JPEG 사진 업로드
+                value:
+                  file_name: "morning_walk.jpg"
+                  content_type: "image/jpeg"
+                  entry_date: "2026-06-13"
+      responses:
+        "200":
+          description: 업로드 URL 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateUploadUrlResponse'
+        "400":
+          description: |
+            잘못된 요청.
+            - 유효성 검증 실패 (`EB_00_001`)
+            - 요청 본문 파싱 오류 (`EB_00_002`)
+            - 지원하지 않는 콘텐츠 타입 (`EB_02_002`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                validation_error:
+                  summary: 유효성 검증 실패
+                  value:
+                    data:
+                      error_code: EB_00_001
+                      message: "요청 값이 올바르지 않습니다."
+                      details:
+                        - field: "file_name"
+                          message: "must not be blank"
+                malformed_request:
+                  summary: 요청 본문 파싱 오류
+                  value:
+                    data:
+                      error_code: EB_00_002
+                      message: "요청을 읽을 수 없습니다."
+                      details: null
+                unsupported_content_type:
+                  summary: 지원하지 않는 콘텐츠 타입
+                  value:
+                    data:
+                      error_code: EB_02_002
+                      message: "지원하지 않는 콘텐츠 타입입니다. 허용: image/jpeg, image/png, image/webp, image/gif"
+                      details: null
+        "500":
+          description: |
+            서버 내부 오류.
+            - 공통 서버 오류 (`ES_00_001`)
+            - 스토리지 업로드 URL 생성 실패 (`ES_03_001`)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              examples:
+                internal_error:
+                  summary: 서버 내부 오류
+                  value:
+                    data:
+                      error_code: ES_00_001
+                      message: "서버 오류가 발생했습니다."
+                      details: null
+                storage_error:
+                  summary: 업로드 URL 생성 실패
+                  value:
+                    data:
+                      error_code: ES_03_001
+                      message: "이미지 업로드 URL 생성에 실패했습니다."
+                      details: null
+
 components:
   securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+    JifelogJwtAuth:
+      type: apiKey
+      in: header
+      name: X-Jifelog-JWT
       description: |
-        JWT Bearer 토큰 인증.
-        `Authorization: Bearer <token>` 형식으로 전달합니다.
+        Jifelog JWT 토큰.
+        `X-Jifelog-JWT: <token>` 형식으로 요청 헤더에 직접 전달합니다.
 
   parameters:
     ApiVersion:
@@ -245,6 +446,56 @@ components:
       example: "550e8400-e29b-41d4-a716-446655440000"
 
   schemas:
+    CreateAccountRequest:
+      type: object
+      description: 계정 생성 요청 본문
+      required:
+        - nickname
+      properties:
+        nickname:
+          type: string
+          description: 닉네임 (1~50자, 고유해야 함)
+          minLength: 1
+          maxLength: 50
+          example: "지플로거"
+        profile_img:
+          type: string
+          description: 프로필 이미지 URL (선택, 기본값 빈 문자열)
+          default: ""
+          example: ""
+
+    CreateAccountResponse:
+      type: object
+      description: 계정 생성 성공 응답
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: 생성된 계정의 고유 식별자
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    AccountMeResponse:
+      type: object
+      description: 내 계정 조회 응답
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: 계정 고유 식별자
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        nickname:
+          type: string
+          description: 닉네임
+          example: "지플로거"
+        username:
+          type: string
+          description: 사용자명 (로그인 식별자)
+          example: "jifelogger"
+        profile_img:
+          type: string
+          description: 프로필 이미지 URL
+          example: ""
+
     CreateDiaryRequest:
       type: object
       description: 일기 작성 요청 본문
@@ -338,6 +589,51 @@ components:
           description: 생성된 일기의 고유 식별자
           example: "550e8400-e29b-41d4-a716-446655440000"
 
+    GenerateUploadUrlRequest:
+      type: object
+      description: 일기 사진 업로드 URL 생성 요청 본문
+      required:
+        - file_name
+        - content_type
+        - entry_date
+      properties:
+        file_name:
+          type: string
+          description: 업로드할 파일명
+          minLength: 1
+          example: "morning_walk.jpg"
+        content_type:
+          type: string
+          description: |
+            콘텐츠 타입 (MIME).
+            허용 값: `image/jpeg`, `image/png`, `image/webp`, `image/gif`
+          minLength: 1
+          example: "image/jpeg"
+        entry_date:
+          type: string
+          format: date
+          description: 일기 날짜 (객체 키 경로에 사용됨)
+          example: "2026-06-13"
+
+    GenerateUploadUrlResponse:
+      type: object
+      description: 일기 사진 업로드 URL 생성 응답
+      properties:
+        upload_url:
+          type: string
+          format: uri
+          description: 클라이언트가 직접 PUT 업로드할 Presigned URL
+          example: "https://storage.jifelog.com/diary/550e8400.../2026-06-13/abc.jpg?X-Amz-..."
+        object_key:
+          type: string
+          description: 스토리지 내 객체 키 (`diary/{userInfoId}/{entryDate}/{uuid}.{ext}` 형식)
+          example: "diary/550e8400-e29b-41d4-a716-446655440000/2026-06-13/123e4567-e89b-12d3-a456-426614174000.jpg"
+        expires_at:
+          type: string
+          format: date-time
+          description: 업로드 URL 만료 시각 (UTC)
+          example: "2026-06-13T10:00:00Z"
+
     Mood:
       type: string
       description: 오늘의 기분
@@ -396,9 +692,13 @@ components:
             |------|----------|------|
             | EB_00_001 | 400 | 요청 값이 올바르지 않음 (유효성 검증 실패) |
             | EB_00_002 | 400 | 요청 본문을 읽을 수 없음 (파싱 오류) |
+            | EB_02_002 | 400 | 지원하지 않는 콘텐츠 타입 (일기 사진) |
+            | EN_01_001 | 404 | 존재하지 않는 계정 |
             | EN_02_001 | 404 | 존재하지 않는 일기 |
+            | EC_01_001 | 409 | 이미 사용 중인 닉네임 |
             | EC_02_001 | 409 | 이미 작성된 일기가 존재함 |
             | ES_00_001 | 500 | 서버 내부 오류 |
+            | ES_03_001 | 500 | 이미지 업로드 URL 생성 실패 (스토리지) |
           example: EN_02_001
         message:
           type: string
