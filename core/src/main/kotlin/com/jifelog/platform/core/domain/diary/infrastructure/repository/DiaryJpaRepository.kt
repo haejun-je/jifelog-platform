@@ -7,4 +7,6 @@ import java.util.UUID
 
 interface DiaryJpaRepository : JpaRepository<DiaryEntity, UUID> {
     fun existsByUserInfoIdAndEntryDate(userInfoId: UUID, entryDate: LocalDate): Boolean
+
+    fun findAllByUserInfoIdOrderByEntryDateDesc(userInfoId: UUID): List<DiaryEntity>
 }
