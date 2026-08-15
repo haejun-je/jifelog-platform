@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
 
 @Service
-@Transactional
 class DiaryCommandService(
     private val saveDiaryPort: SaveDiaryPort,
     private val loadDiaryPort: LoadDiaryPort,
@@ -41,7 +40,9 @@ class DiaryCommandService(
         )
         val saved = saveDiaryPort.save(diary)
 
-        // 첨부 사진이 함께 전달되면 동일 트랜잭션 내에서 PENDING → COMMITTED 로 승격한다.
+        // 첨부 사진이 함께 전달되면 PENDING → COMMITTED 로 승격한다.
+        // statObject 검증(HTTP)은 StorageService 내부에서 트랜잭션 밖에 수행되므로,
+        // MinIO 응답이 지연되어도 DB 커넥션을 점유하지 않는다.
         if (command.objectKeys.isNotEmpty()) {
             storageUseCase.commitMediaForDiary(
                 CommitDiaryMediaCommand(
@@ -55,6 +56,7 @@ class DiaryCommandService(
         return saved.id
     }
 
+    @Transactional
     override fun delete(id: UUID, userInfoId: UUID) {
         val diary = loadDiaryPort.loadDiary(id)
             ?: throw BusinessException(ErrorCode.EN_02_001)
