@@ -5,4 +5,5 @@ import java.util.UUID
 
 interface LoadDiaryPort {
     fun loadDiary(id: UUID): Diary?
+    fun loadAllDiaries(userInfoId: UUID): List<Diary>
 }

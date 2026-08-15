@@ -1,13 +1,16 @@
 package com.jifelog.platform.api.diary.controller
 
 import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryCommandUseCase
+import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryQueryUseCase
 import com.jifelog.platform.api.diary.controller.dto.CreateDiaryRequest
 import com.jifelog.platform.api.diary.controller.dto.CreateDiaryResponse
+import com.jifelog.platform.api.diary.controller.dto.DiaryListItemResponse
 import com.jifelog.security.jwt.api.JifelogUser
 import com.jifelog.security.jwt.api.JifelogUserData
 import jakarta.validation.Valid
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.DeleteMapping
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -20,6 +23,7 @@ import java.util.UUID
 @RequestMapping("/diaries")
 class DiaryController(
     private val diaryCommandUseCase: DiaryCommandUseCase,
+    private val diaryQueryUseCase: DiaryQueryUseCase,
 ) {
 
     @PostMapping(version = "1")
@@ -43,5 +47,13 @@ class DiaryController(
     ): ResponseEntity<Void> {
         diaryCommandUseCase.delete(id, UUID.fromString(jifelogUser.userId))
         return ResponseEntity.noContent().build()
+    }
+
+    @GetMapping(version = "1")
+    fun list(
+        @JifelogUser jifelogUser: JifelogUserData,
+    ): ResponseEntity<List<DiaryListItemResponse>> {
+        val diaries = diaryQueryUseCase.getDiaries(UUID.fromString(jifelogUser.userId))
+        return ResponseEntity.ok(diaries.map { DiaryListItemResponse.from(it) })
     }
 }

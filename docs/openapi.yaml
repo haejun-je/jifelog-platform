@@ -277,6 +277,62 @@ paths:
                   message: "서버 오류가 발생했습니다."
                   details: null
 
+    get:
+      operationId: listDiaries
+      summary: 일기 목록 조회
+      description: |
+        로그인한 사용자가 등록한 일기 목록을 조회합니다.
+
+        - `X-Jifelog-JWT` 헤더로 인증이 필요합니다.
+        - 최신순(`entry_date` 내림차순)으로 정렬되어 반환됩니다.
+        - 페이징 처리 및 필터링은 지원하지 않습니다.
+        - 첨부 이미지 링크(`image`)는 실제 스토리지 연동 전까지 목업 URL이 반환됩니다.
+      tags: [Diary]
+      parameters:
+        - $ref: '#/components/parameters/ApiVersion'
+      responses:
+        "200":
+          description: 일기 목록 조회 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DiaryListItemResponse'
+              examples:
+                multiple:
+                  summary: 여러 일기
+                  value:
+                    - date: "2026-08-15"
+                      mood: HAPPY
+                      weather: SUNNY
+                      satisfaction: 4
+                      keywords:
+                        - 산책
+                        - 독서
+                      image: "https://mock.local/diary/550e8400-e29b-41d4-a716-446655440000/preview"
+                    - date: "2026-08-14"
+                      mood: TIRED
+                      weather: RAIN
+                      satisfaction: 2
+                      keywords:
+                        - 휴식
+                      image: "https://mock.local/diary/660e8400-e29b-41d4-a716-446655440001/preview"
+                empty:
+                  summary: 빈 목록
+                  value: []
+        "500":
+          description: 서버 내부 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorResponse'
+              example:
+                data:
+                  error_code: ES_00_001
+                  message: "서버 오류가 발생했습니다."
+                  details: null
+
   /api/{version}/diaries/{id}:
     delete:
       operationId: deleteDiary
@@ -605,6 +661,47 @@ components:
           format: uuid
           description: 생성된 일기의 고유 식별자
           example: "550e8400-e29b-41d4-a716-446655440000"
+
+    DiaryListItemResponse:
+      type: object
+      description: 일기 목록 조회 응답 항목
+      properties:
+        date:
+          type: string
+          format: date
+          description: 일기 날짜
+          example: "2026-08-15"
+        mood:
+          type: string
+          description: 기분
+          enum: [HAPPY, EXCITED, NEUTRAL, SAD, ANGRY, ANXIOUS, TIRED]
+          example: HAPPY
+        weather:
+          type: string
+          description: 날씨
+          enum: [SUNNY, CLOUDY, RAIN, SNOW, HAIL, TYPHOON]
+          example: SUNNY
+        satisfaction:
+          type: integer
+          description: 만족도 (1~5)
+          minimum: 1
+          maximum: 5
+          example: 4
+        keywords:
+          type: array
+          description: 키워드
+          items:
+            type: string
+            maxLength: 50
+          maxItems: 10
+          example:
+            - 산책
+            - 독서
+        image:
+          type: string
+          format: uri
+          description: 첨부 이미지 미리보기 링크 (목업 URL)
+          example: "https://mock.local/diary/550e8400-e29b-41d4-a716-446655440000/preview"
 
     GenerateUploadUrlRequest:
       type: object
