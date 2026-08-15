@@ -1,7 +1,8 @@
 package com.jifelog.platform.api.diary.controller
 
 import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryCommandUseCase
-import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryQueryUseCase
+import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryListPreviewUseCase
+import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryPreviewModel
 import com.jifelog.platform.core.domain.diary.model.Diary
 import com.jifelog.platform.core.domain.diary.model.Mood
 import com.jifelog.platform.core.domain.diary.model.Weather
@@ -38,10 +39,10 @@ import java.util.UUID
 class DiaryControllerTest {
 
     @MockitoBean
-    private lateinit var diaryQueryUseCase: DiaryQueryUseCase
+    private lateinit var diaryCommandUseCase: DiaryCommandUseCase
 
     @MockitoBean
-    private lateinit var diaryCommandUseCase: DiaryCommandUseCase
+    private lateinit var diaryListPreviewUseCase: DiaryListPreviewUseCase
 
     @Autowired
     private lateinit var mockMvc: MockMvc
@@ -87,7 +88,9 @@ class DiaryControllerTest {
             createdAt = Instant.now(),
             updatedAt = Instant.now(),
         )
-        Mockito.`when`(diaryQueryUseCase.getDiaries(userId)).thenReturn(listOf(diary))
+        val presignedUrl = "https://minio.jifelog.com:9000/diary-media/foo.jpg?X-Amz-Signature=abc"
+        Mockito.`when`(diaryListPreviewUseCase.getPreviews(userId))
+            .thenReturn(listOf(DiaryPreviewModel(diary, presignedUrl)))
 
         mockMvc.perform(get("/api/v1/diaries"))
             .andExpect(status().isOk)
@@ -96,16 +99,43 @@ class DiaryControllerTest {
             .andExpect(jsonPath("$[0].weather").value("SUNNY"))
             .andExpect(jsonPath("$[0].satisfaction").value(4))
             .andExpect(jsonPath("$[0].keywords[0]").value("a"))
-            .andExpect(jsonPath("$[0].image").value("https://mock.local/diary/$diaryId/preview"))
+            .andExpect(jsonPath("$[0].image_url").value(presignedUrl))
     }
 
     @Test
     fun `GET diaries returns empty array when no diaries`() {
-        Mockito.`when`(diaryQueryUseCase.getDiaries(userId)).thenReturn(emptyList())
+        Mockito.`when`(diaryListPreviewUseCase.getPreviews(userId)).thenReturn(emptyList())
 
         mockMvc.perform(get("/api/v1/diaries"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$").isArray)
             .andExpect(jsonPath("$.length()").value(0))
+    }
+
+    @Test
+    fun `GET diaries returns image_url as null when diary has no media`() {
+        val diaryId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000")
+        val diary = Diary.withId(
+            id = diaryId,
+            userInfoId = userId,
+            entryDate = LocalDate.of(2026, 8, 15),
+            mood = Mood.HAPPY,
+            weather = Weather.SUNNY,
+            energyLevel = 3,
+            satisfactionLevel = 4,
+            keywords = listOf("a"),
+            achievement = emptyList(),
+            regret = emptyList(),
+            content = "c",
+            createdAt = Instant.now(),
+            updatedAt = Instant.now(),
+        )
+        Mockito.`when`(diaryListPreviewUseCase.getPreviews(userId))
+            .thenReturn(listOf(DiaryPreviewModel(diary, imageUrl = null)))
+
+        mockMvc.perform(get("/api/v1/diaries"))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].image_url").doesNotExist())
+            .andExpect(jsonPath("$[0].image_url").value(org.hamcrest.Matchers.nullValue()))
     }
 }

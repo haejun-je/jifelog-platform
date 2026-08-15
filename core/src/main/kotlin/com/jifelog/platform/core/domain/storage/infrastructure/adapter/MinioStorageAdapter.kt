@@ -2,8 +2,11 @@ package com.jifelog.platform.core.domain.storage.infrastructure.adapter
 
 import com.jifelog.platform.core.domain.storage.application.port.`in`.GenerateUploadUrlCommand
 import com.jifelog.platform.core.domain.storage.application.port.`in`.UploadUrlResult
+import com.jifelog.platform.core.domain.storage.application.port.out.GenerateDownloadUrlPort
 import com.jifelog.platform.core.domain.storage.application.port.out.GenerateUploadUrlPort
 import com.jifelog.platform.core.config.minio.properties.MinioProperties
+import io.minio.GetPresignedObjectUrlArgs
+import io.minio.Http
 import io.minio.MinioClient
 import io.minio.PostPolicy
 import org.slf4j.LoggerFactory
@@ -17,7 +20,7 @@ import java.util.concurrent.TimeUnit
 class MinioStorageAdapter(
     private val minioClient: MinioClient,
     private val minioProperties: MinioProperties,
-) : GenerateUploadUrlPort {
+) : GenerateUploadUrlPort, GenerateDownloadUrlPort {
 
     private val log = LoggerFactory.getLogger(this::class.java)
 
@@ -54,5 +57,22 @@ class MinioStorageAdapter(
             formData = formData,
             maxFileSizeBytes = maxFileSizeBytes,
         )
+    }
+
+    override fun presignGetObject(bucketName: String, objectKey: String): String {
+        val expirySeconds = TimeUnit.MINUTES.toSeconds(minioProperties.presignedUrlExpiryMinutes)
+        return try {
+            val args = GetPresignedObjectUrlArgs.builder()
+                .method(Http.Method.GET)
+                .bucket(bucketName)
+                .`object`(objectKey)
+                .expiry(expirySeconds.toInt())
+                .build()
+            minioClient.getPresignedObjectUrl(args)
+        } catch (e: Exception) {
+            // presign 자체는 네트워크 호출이 없지만, SDK 가 내부에서 IllegalArgumentException 등을 던질 수 있다.
+            log.error("Failed to presign GET url. bucket={}, object={}", bucketName, objectKey, e)
+            throw e
+        }
     }
 }

@@ -286,7 +286,8 @@ paths:
         - `X-Jifelog-JWT` 헤더로 인증이 필요합니다.
         - 최신순(`entry_date` 내림차순)으로 정렬되어 반환됩니다.
         - 페이징 처리 및 필터링은 지원하지 않습니다.
-        - 첨부 이미지 링크(`image`)는 실제 스토리지 연동 전까지 목업 URL이 반환됩니다.
+        - 첨부 이미지 링크(`image_url`)는 MinIO presigned GET URL 입니다 (만료: 서버 설정 `minio.presigned-url-expiry-minutes`, 기본 15분).
+        - 첨부 미디어가 없는 일기는 `image_url` 이 `null` 입니다.
       tags: [Diary]
       parameters:
         - $ref: '#/components/parameters/ApiVersion'
@@ -310,14 +311,14 @@ paths:
                       keywords:
                         - 산책
                         - 독서
-                      image: "https://mock.local/diary/550e8400-e29b-41d4-a716-446655440000/preview"
+                      image_url: "https://minio.jifelog.com:9000/diary-media/550e8400-e29b-41d4-a716-446655440000/2026-08-15/abc123.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=900&X-Amz-Signature=..."
                     - date: "2026-08-14"
                       mood: TIRED
                       weather: RAIN
                       satisfaction: 2
                       keywords:
                         - 휴식
-                      image: "https://mock.local/diary/660e8400-e29b-41d4-a716-446655440001/preview"
+                      image_url: null
                 empty:
                   summary: 빈 목록
                   value: []
@@ -697,11 +698,15 @@ components:
           example:
             - 산책
             - 독서
-        image:
+        image_url:
           type: string
           format: uri
-          description: 첨부 이미지 미리보기 링크 (목업 URL)
-          example: "https://mock.local/diary/550e8400-e29b-41d4-a716-446655440000/preview"
+          nullable: true
+          description: |
+            첨부 이미지 미리보기 링크.
+            MinIO 에 대해 발급된 presigned GET URL 이며, 만료 시간은 서버 설정 `minio.presigned-url-expiry-minutes` (기본 15분) 입니다.
+            첨부 미디어가 없는 일기는 `null` 입니다.
+          example: "https://minio.jifelog.com:9000/diary-media/550e8400-e29b-41d4-a716-446655440000/2026-08-15/abc123.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=900&X-Amz-Signature=..."
 
     GenerateUploadUrlRequest:
       type: object

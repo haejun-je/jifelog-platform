@@ -1,7 +1,7 @@
 package com.jifelog.platform.api.diary.controller
 
 import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryCommandUseCase
-import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryQueryUseCase
+import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryListPreviewUseCase
 import com.jifelog.platform.api.diary.controller.dto.CreateDiaryRequest
 import com.jifelog.platform.api.diary.controller.dto.CreateDiaryResponse
 import com.jifelog.platform.api.diary.controller.dto.DiaryListItemResponse
@@ -23,7 +23,7 @@ import java.util.UUID
 @RequestMapping("/diaries")
 class DiaryController(
     private val diaryCommandUseCase: DiaryCommandUseCase,
-    private val diaryQueryUseCase: DiaryQueryUseCase,
+    private val diaryListPreviewUseCase: DiaryListPreviewUseCase,
 ) {
 
     @PostMapping(version = "1")
@@ -53,7 +53,7 @@ class DiaryController(
     fun list(
         @JifelogUser jifelogUser: JifelogUserData,
     ): ResponseEntity<List<DiaryListItemResponse>> {
-        val diaries = diaryQueryUseCase.getDiaries(UUID.fromString(jifelogUser.userId))
-        return ResponseEntity.ok(diaries.map { DiaryListItemResponse.from(it) })
+        val items = diaryListPreviewUseCase.getPreviews(UUID.fromString(jifelogUser.userId))
+        return ResponseEntity.ok(items.map { DiaryListItemResponse.from(it) })
     }
 }
