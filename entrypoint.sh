@@ -32,4 +32,10 @@ export JIFELOG_MINIO_ACCESS_KEY="$(tr -d '\r\n' <  /etc/secrets/JIFELOG_MINIO_AC
 export JIFELOG_MINIO_SECRET_KEY="$(tr -d '\r\n' <  /etc/secrets/JIFELOG_MINIO_SECRET_KEY)"
 export JIFELOG_MINIO_BUCKET="$(tr -d '\r\n' <  /etc/secrets/JIFELOG_MINIO_BUCKET)"
 
-exec java -jar /app/app.jar
+exec java \
+  -XX:ActiveProcessorCount=2 \
+  -XX:MetaspaceSize=128m \
+  -XX:MaxMetaspaceSize=128m \
+  -Xms512m \
+  -Xmx512m \
+  -jar /app/app.jar
