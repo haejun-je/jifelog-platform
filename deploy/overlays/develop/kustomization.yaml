@@ -9,7 +9,7 @@ resources:
 images:
   - name: jifelog-platform-api
     newName: jhjun07/jifelog-platform-api
-    newTag: dev-c4607c3869e0052e1187941336825814726552c3
+    newTag: dev-dd9b35f4af5c0ea24c9bde645eb053ad189270a5
 
 patches:
   - path: patch-deployment.yaml
