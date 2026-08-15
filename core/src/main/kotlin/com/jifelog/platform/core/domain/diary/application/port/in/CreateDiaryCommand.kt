@@ -16,4 +16,5 @@ data class CreateDiaryCommand(
     val achievement: List<String>,
     val regret: List<String>,
     val content: String,
+    val objectKeys: List<String> = emptyList(),
 )

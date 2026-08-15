@@ -44,4 +44,7 @@ enum class ErrorCode(val status: ErrorStatus, val defaultMessage: String) {
 
     // 500 Internal Server Error - storage(03)
     ES_03_001(ErrorStatus.INTERNAL_SERVER_ERROR, "이미지 업로드 URL 생성에 실패했습니다."),
+
+    // 400 Bad Request - storage(03)
+    EB_03_001(ErrorStatus.BAD_REQUEST, "첨부된 파일을 찾을 수 없거나 아직 업로드되지 않았습니다."),
 }
