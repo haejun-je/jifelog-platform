@@ -6,6 +6,7 @@ interface StorageUseCase {
 
 data class UploadUrlResult(
     val uploadUrl: String,
-    val objectKey: String,
     val expiresAt: java.time.Instant,
+    val formData: Map<String, String>,
+    val maxFileSizeBytes: Long,
 )
