@@ -94,11 +94,13 @@ class DiaryControllerTest {
 
         mockMvc.perform(get("/api/v1/diaries"))
             .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].id").value("550e8400-e29b-41d4-a716-446655440000"))
             .andExpect(jsonPath("$[0].date").value("2026-08-15"))
             .andExpect(jsonPath("$[0].mood").value("HAPPY"))
             .andExpect(jsonPath("$[0].weather").value("SUNNY"))
             .andExpect(jsonPath("$[0].satisfaction").value(4))
             .andExpect(jsonPath("$[0].keywords[0]").value("a"))
+            .andExpect(jsonPath("$[0].content").value("c"))
             .andExpect(jsonPath("$[0].image_url").value(presignedUrl))
     }
 
@@ -135,6 +137,8 @@ class DiaryControllerTest {
 
         mockMvc.perform(get("/api/v1/diaries"))
             .andExpect(status().isOk)
+            .andExpect(jsonPath("$[0].id").value("550e8400-e29b-41d4-a716-446655440000"))
+            .andExpect(jsonPath("$[0].content").value("c"))
             .andExpect(jsonPath("$[0].image_url").doesNotExist())
             .andExpect(jsonPath("$[0].image_url").value(org.hamcrest.Matchers.nullValue()))
     }
