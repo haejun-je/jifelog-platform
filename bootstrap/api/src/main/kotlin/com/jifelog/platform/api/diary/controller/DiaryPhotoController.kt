@@ -37,8 +37,9 @@ class DiaryPhotoController(
         return ResponseEntity.ok(
             GenerateUploadUrlResponse(
                 uploadUrl = result.uploadUrl,
-                objectKey = result.objectKey,
                 expiresAt = result.expiresAt,
+                formData = result.formData,
+                maxFileSizeBytes = result.maxFileSizeBytes,
             )
         )
     }

@@ -8,6 +8,8 @@ import com.jifelog.platform.core.domain.diary.application.port.out.DeleteDiaryPo
 import com.jifelog.platform.core.domain.diary.application.port.out.LoadDiaryPort
 import com.jifelog.platform.core.domain.diary.application.port.out.SaveDiaryPort
 import com.jifelog.platform.core.domain.diary.model.Diary
+import com.jifelog.platform.core.domain.storage.application.port.`in`.CommitDiaryMediaCommand
+import com.jifelog.platform.core.domain.storage.application.port.`in`.StorageUseCase
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID
@@ -18,6 +20,7 @@ class DiaryCommandService(
     private val saveDiaryPort: SaveDiaryPort,
     private val loadDiaryPort: LoadDiaryPort,
     private val deleteDiaryPort: DeleteDiaryPort,
+    private val storageUseCase: StorageUseCase,
 ) : DiaryCommandUseCase {
 
     override fun create(command: CreateDiaryCommand): UUID {
@@ -36,8 +39,20 @@ class DiaryCommandService(
             regret = command.regret,
             content = command.content,
         )
+        val saved = saveDiaryPort.save(diary)
 
-        return saveDiaryPort.save(diary).id
+        // 첨부 사진이 함께 전달되면 동일 트랜잭션 내에서 PENDING → COMMITTED 로 승격한다.
+        if (command.objectKeys.isNotEmpty()) {
+            storageUseCase.commitMediaForDiary(
+                CommitDiaryMediaCommand(
+                    userInfoId = command.userInfoId,
+                    diaryId = saved.id,
+                    objectKeys = command.objectKeys,
+                )
+            )
+        }
+
+        return saved.id
     }
 
     override fun delete(id: UUID, userInfoId: UUID) {

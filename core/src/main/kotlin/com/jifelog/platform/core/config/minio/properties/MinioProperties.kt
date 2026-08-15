@@ -9,4 +9,5 @@ data class MinioProperties(
     val secretKey: String,
     val bucket: String,
     val presignedUrlExpiryMinutes: Long = 15,
+    val maxFileSizeBytes: Long = 5L * 1024 * 1024,
 )

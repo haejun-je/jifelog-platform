@@ -38,6 +38,9 @@ data class CreateDiaryRequest(
 
     @field:NotBlank
     val content: String,
+
+    @field:Size(max = 10, message = "objectKeys must be at most 10 items")
+    val objectKeys: List<@Size(max = 512) String> = emptyList(),
 ) {
     fun toCommand(userInfoId: UUID) = CreateDiaryCommand(
         userInfoId = userInfoId,
@@ -50,5 +53,6 @@ data class CreateDiaryRequest(
         achievement = achievement,
         regret = regret,
         content = content,
+        objectKeys = objectKeys,
     )
 }
