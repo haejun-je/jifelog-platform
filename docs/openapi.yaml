@@ -199,6 +199,8 @@ paths:
                   regret:
                     - 운동을 못함
                   content: "오늘은 정말 좋은 하루였다."
+                  object_keys:
+                    - "diary/550e8400-e29b-41d4-a716-446655440000/2026-06-13/123e4567-e89b-12d3-a456-426614174000.jpg"
               tired_rainy_day:
                 summary: 비오고 피곤한 날
                 value:
@@ -213,6 +215,7 @@ paths:
                   regret:
                     - 너무 많이 잤다
                   content: "비가 와서 하루 종일 집에 있었다."
+                  object_keys: []
       responses:
         "201":
           description: 일기 작성 성공
@@ -578,6 +581,20 @@ components:
           description: 일기 본문 내용
           minLength: 1
           example: "오늘은 정말 좋은 하루였다."
+        object_keys:
+          type: array
+          description: |
+            일기에 첨부할 사진의 스토리지 객체 키 목록.
+            `/api/v1/diaries/photos/upload-urls`로 발급받은 업로드 URL의 `object_key`를 사용합니다.
+            - 최대 10개까지 등록 가능
+            - 각 객체 키는 최대 512자
+          items:
+            type: string
+            maxLength: 512
+          maxItems: 10
+          default: []
+          example:
+            - "diary/550e8400-e29b-41d4-a716-446655440000/2026-06-13/123e4567-e89b-12d3-a456-426614174000.jpg"
 
     CreateDiaryResponse:
       type: object
@@ -618,21 +635,41 @@ components:
     GenerateUploadUrlResponse:
       type: object
       description: 일기 사진 업로드 URL 생성 응답
+      required:
+        - upload_url
+        - expires_at
+        - form_data
+        - max_file_size_bytes
       properties:
         upload_url:
           type: string
           format: uri
-          description: 클라이언트가 직접 PUT 업로드할 Presigned URL
-          example: "https://storage.jifelog.com/diary/550e8400.../2026-06-13/abc.jpg?X-Amz-..."
-        object_key:
-          type: string
-          description: 스토리지 내 객체 키 (`diary/{userInfoId}/{entryDate}/{uuid}.{ext}` 형식)
-          example: "diary/550e8400-e29b-41d4-a716-446655440000/2026-06-13/123e4567-e89b-12d3-a456-426614174000.jpg"
+          description: 클라이언트가 직접 업로드할 Presigned URL
+          example: "https://storage.jifelog.com/diary/550e8400-e29b-41d4-a716-446655440000/2026-06-13/123e4567-e89b-12d3-a456-426614174000.jpg?X-Amz-..."
         expires_at:
           type: string
           format: date-time
           description: 업로드 URL 만료 시각 (UTC)
           example: "2026-06-13T10:00:00Z"
+        form_data:
+          type: object
+          description: |
+            업로드 시 함께 전송해야 하는 폼 필드.
+            POST 기반 Presigned 업로드 정책에 필요한 입력값입니다.
+          additionalProperties:
+            type: string
+          example:
+            key: "diary/550e8400-e29b-41d4-a716-446655440000/2026-06-13/123e4567-e89b-12d3-a456-426614174000.jpg"
+            policy: "eyJleHBpcmF0aW9uIjo..."
+            x-amz-algorithm: "AWS4-HMAC-SHA256"
+            x-amz-credential: "..."
+            x-amz-date: "20260613T090000Z"
+            x-amz-signature: "..."
+        max_file_size_bytes:
+          type: integer
+          format: int64
+          description: 업로드 가능한 최대 파일 크기 (바이트)
+          example: 10485760
 
     Mood:
       type: string
