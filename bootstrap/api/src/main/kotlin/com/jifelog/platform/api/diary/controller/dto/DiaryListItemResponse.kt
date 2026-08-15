@@ -1,6 +1,6 @@
 package com.jifelog.platform.api.diary.controller.dto
 
-import com.jifelog.platform.core.domain.diary.model.Diary
+import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryPreviewModel
 import com.jifelog.platform.core.domain.diary.model.Mood
 import com.jifelog.platform.core.domain.diary.model.Weather
 import java.time.LocalDate
@@ -11,16 +11,19 @@ data class DiaryListItemResponse(
     val weather: Weather,
     val satisfaction: Short,
     val keywords: List<String>,
-    val image: String,
+    val imageUrl: String?,
 ) {
     companion object {
-        fun from(diary: Diary): DiaryListItemResponse = DiaryListItemResponse(
-            date = diary.entryDate,
-            mood = diary.mood,
-            weather = diary.weather,
-            satisfaction = diary.satisfactionLevel,
-            keywords = diary.keywords,
-            image = "https://mock.local/diary/${diary.id}/preview",
-        )
+        fun from(model: DiaryPreviewModel): DiaryListItemResponse {
+            val diary = model.diary
+            return DiaryListItemResponse(
+                date = diary.entryDate,
+                mood = diary.mood,
+                weather = diary.weather,
+                satisfaction = diary.satisfactionLevel,
+                keywords = diary.keywords,
+                imageUrl = model.imageUrl,
+            )
+        }
     }
 }

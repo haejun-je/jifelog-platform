@@ -30,4 +30,19 @@ class DiaryMediaAdapter(
                 status = DiaryMediaStatus.PENDING,
             )
             .map(DiaryMediaMapper::toDomain)
+
+    override fun findAllByUserInfoIdAndDiaryIdsInAndStatus(
+        userInfoId: UUID,
+        diaryIds: List<UUID>,
+        status: DiaryMediaStatus,
+    ): List<DiaryMedia> {
+        if (diaryIds.isEmpty()) return emptyList()
+        return diaryMediaJpaRepository
+            .findPreviewMediaByUserInfoIdAndDiaryIdsInAndStatus(
+                userInfoId = userInfoId,
+                diaryIds = diaryIds,
+                status = status,
+            )
+            .map(DiaryMediaMapper::toDomain)
+    }
 }
