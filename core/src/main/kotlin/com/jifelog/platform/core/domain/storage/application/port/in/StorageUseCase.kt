@@ -1,8 +1,17 @@
 package com.jifelog.platform.core.domain.storage.application.port.`in`
 
+import java.util.UUID
+
 interface StorageUseCase {
-    fun generateUploadUrl(objectKey: String, contentType: String): UploadUrlResult
+    fun generateUploadUrl(command: GenerateUploadUrlCommand): UploadUrlResult
 }
+
+data class GenerateUploadUrlCommand(
+    val userInfoId: UUID,
+    val objectKey: String,
+    val originalName: String,
+    val contentType: String,
+)
 
 data class UploadUrlResult(
     val uploadUrl: String,

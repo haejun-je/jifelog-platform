@@ -4,6 +4,7 @@ import com.jifelog.platform.common.exception.BusinessException
 import com.jifelog.platform.common.exception.ErrorCode
 import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryPhotoUseCase
 import com.jifelog.platform.core.domain.diary.application.port.`in`.GenerateUploadUrlCommand
+import com.jifelog.platform.core.domain.storage.application.port.`in`.GenerateUploadUrlCommand as StorageGenerateUploadUrlCommand
 import com.jifelog.platform.core.domain.storage.application.port.`in`.StorageUseCase
 import com.jifelog.platform.core.domain.storage.application.port.`in`.UploadUrlResult
 import org.springframework.stereotype.Service
@@ -41,7 +42,14 @@ class DiaryPhotoService(
 
         val objectKey = buildObjectKey(command.userInfoId, command.entryDate, extension)
 
-        return storageUseCase.generateUploadUrl(objectKey, command.contentType)
+        return storageUseCase.generateUploadUrl(
+            StorageGenerateUploadUrlCommand(
+                userInfoId = command.userInfoId,
+                objectKey = objectKey,
+                originalName = command.fileName,
+                contentType = command.contentType,
+            )
+        )
     }
 
     private fun buildObjectKey(userInfoId: UUID, entryDate: LocalDate, extension: String): String {

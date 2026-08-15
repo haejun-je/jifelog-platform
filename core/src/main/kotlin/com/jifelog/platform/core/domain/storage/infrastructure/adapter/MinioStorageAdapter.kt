@@ -1,5 +1,6 @@
 package com.jifelog.platform.core.domain.storage.infrastructure.adapter
 
+import com.jifelog.platform.core.domain.storage.application.port.`in`.GenerateUploadUrlCommand
 import com.jifelog.platform.core.domain.storage.application.port.`in`.UploadUrlResult
 import com.jifelog.platform.core.domain.storage.application.port.out.GenerateUploadUrlPort
 import com.jifelog.platform.core.config.minio.properties.MinioProperties
@@ -20,15 +21,15 @@ class MinioStorageAdapter(
 
     private val log = LoggerFactory.getLogger(this::class.java)
 
-    override fun generateUploadUrl(objectKey: String, contentType: String): UploadUrlResult {
+    override fun generateUploadUrl(command: GenerateUploadUrlCommand): UploadUrlResult {
         val expiryMinutes = minioProperties.presignedUrlExpiryMinutes
         val maxFileSizeBytes = minioProperties.maxFileSizeBytes
         val now = ZonedDateTime.now(ZoneOffset.UTC)
 
         val policy = PostPolicy(minioProperties.bucket, now.plusMinutes(expiryMinutes))
             .apply {
-                addEqualsCondition("key", objectKey)
-                addEqualsCondition("Content-Type", contentType)
+                addEqualsCondition("key", command.objectKey)
+                addEqualsCondition("Content-Type", command.contentType)
                 addContentLengthRangeCondition(0, maxFileSizeBytes)
             }
 
@@ -41,8 +42,8 @@ class MinioStorageAdapter(
         // them so the client only needs to attach the file part.
         val formData: Map<String, String> = signedFormData +
             mapOf(
-                "key" to objectKey,
-                "Content-Type" to contentType,
+                "key" to command.objectKey,
+                "Content-Type" to command.contentType,
             )
 
         val expiresAt = Instant.now().plusSeconds(TimeUnit.MINUTES.toSeconds(expiryMinutes))
