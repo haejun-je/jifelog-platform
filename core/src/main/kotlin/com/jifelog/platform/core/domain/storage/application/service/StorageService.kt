@@ -9,12 +9,14 @@ import com.jifelog.platform.core.domain.storage.application.port.`in`.StorageUse
 import com.jifelog.platform.core.domain.storage.application.port.`in`.UploadUrlResult
 import com.jifelog.platform.core.domain.storage.application.port.out.GenerateUploadUrlPort
 import com.jifelog.platform.core.domain.storage.application.port.out.LoadDiaryMediaPort
+import com.jifelog.platform.core.domain.storage.application.port.out.ObjectStat
 import com.jifelog.platform.core.domain.storage.application.port.out.SaveDiaryMediaPort
 import com.jifelog.platform.core.domain.storage.application.port.out.StatObjectPort
 import com.jifelog.platform.core.domain.storage.model.DiaryMedia
 import com.jifelog.platform.core.domain.storage.model.FileMetadata
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import org.springframework.transaction.support.TransactionTemplate
 
 @Service
 class StorageService(
@@ -23,6 +25,7 @@ class StorageService(
     private val loadDiaryMediaPort: LoadDiaryMediaPort,
     private val statObjectPort: StatObjectPort,
     private val minioProperties: MinioProperties,
+    private val transactionTemplate: TransactionTemplate,
 ) : StorageUseCase {
 
     private val log = LoggerFactory.getLogger(this::class.java)
@@ -50,7 +53,7 @@ class StorageService(
     override fun commitMediaForDiary(command: CommitDiaryMediaCommand) {
         if (command.objectKeys.isEmpty()) return
 
-        // 1) PENDING row 를 한 번에 조회 (커밋 대상이 사용자의 것인지 필터)
+        // 1) PENDING row 를 한 번에 조회 (커밋 대상이 사용자의 것인지 필터) — DB read
         val diaryMediaByKey: Map<String, DiaryMedia> = try {
             loadDiaryMediaPort
                 .findPendingByUserInfoIdAndObjectKeys(command.userInfoId, command.objectKeys)
@@ -59,8 +62,10 @@ class StorageService(
             throw BusinessException(ErrorCode.ES_03_001, cause = e)
         }
 
-        // 2) 입력 순서대로 처리하면서 sort_order 를 인덱스로 결정
-        command.objectKeys.forEachIndexed { index, objectKey ->
+        // 2) MinIO statObject 검증 — HTTP 호출이므로 트랜잭션 밖에서 수행한다.
+        //    모든 key 의 검증을 마친 뒤 3) 에서 일괄 commit 하므로,
+        //    중간 key 가 실패해도 앞선 key 가 부분 commit 되지 않는다.
+        val prepared: List<Pair<DiaryMedia, ObjectStat>> = command.objectKeys.map { objectKey ->
             val diaryMedia = diaryMediaByKey[objectKey]
                 ?: run {
                     log.warn(
@@ -80,22 +85,28 @@ class StorageService(
                 )
                 throw BusinessException(ErrorCode.EB_03_001)
             }
+            diaryMedia to stat
+        }
 
-            val committedDiaryMedia = diaryMedia.commit(
-                diaryId = command.diaryId,
-                metadata = FileMetadata(
-                    etag = stat.etag,
-                    size = stat.size,
-                    mimeType = stat.contentType,
-                ),
-                sortOrder = index,
-            )
-
-            try {
-                saveDiaryMediaPort.save(committedDiaryMedia)
-            } catch (e: Exception) {
-                throw BusinessException(ErrorCode.ES_03_001, cause = e)
+        // 3) 검증을 통과한 media 를 한 트랜잭션으로 일괄 COMMITTED 저장
+        try {
+            transactionTemplate.execute {
+                prepared.forEachIndexed { index, (diaryMedia, stat) ->
+                    saveDiaryMediaPort.save(
+                        diaryMedia.commit(
+                            diaryId = command.diaryId,
+                            metadata = FileMetadata(
+                                etag = stat.etag,
+                                size = stat.size,
+                                mimeType = stat.contentType,
+                            ),
+                            sortOrder = index,
+                        )
+                    )
+                }
             }
+        } catch (e: Exception) {
+            throw BusinessException(ErrorCode.ES_03_001, cause = e)
         }
     }
 }

@@ -10,4 +10,7 @@ data class MinioProperties(
     val bucket: String,
     val presignedUrlExpiryMinutes: Long = 15,
     val maxFileSizeBytes: Long = 5L * 1024 * 1024,
+    val connectTimeoutMillis: Long = 5_000,
+    val writeTimeoutMillis: Long = 5_000,
+    val readTimeoutMillis: Long = 5_000,
 )

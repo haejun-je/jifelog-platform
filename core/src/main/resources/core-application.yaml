@@ -11,6 +11,10 @@ minio:
   bucket: ${JIFELOG_MINIO_BUCKET}
   presigned-url-expiry-minutes: 15
   max-file-size-bytes: 5242880 # 5 MiB, enforced by the presigned POST policy
+  # SDK 기본값(5분) 대비 축소 — 지연 시 DB 커넥션 점유를 제한한다 (ms)
+  connect-timeout-millis: 5000
+  write-timeout-millis: 5000
+  read-timeout-millis: 5000
 
 logging:
   level:
