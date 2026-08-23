@@ -1,5 +1,6 @@
 package com.jifelog.platform.api.config.logging
 
+import jakarta.servlet.http.HttpServletRequest
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.filter.CommonsRequestLoggingFilter
@@ -9,11 +10,16 @@ class RequestResponseLoggingConfig {
 
     @Bean
     fun requestLoggingFilter(): CommonsRequestLoggingFilter =
-        CommonsRequestLoggingFilter().apply {
-            setIncludePayload(true)
-            setMaxPayloadLength(10_000)
-            setIncludeQueryString(true)
-            setIncludeHeaders(true)
-            setIncludeClientInfo(true)
+        object : CommonsRequestLoggingFilter() {
+            override fun shouldLog(request: HttpServletRequest): Boolean =
+                !request.requestURI.startsWith("/actuator/")
+
+            init {
+                isIncludePayload = true
+                maxPayloadLength = 10_000
+                isIncludeQueryString = true
+                isIncludeHeaders = true
+                isIncludeClientInfo = true
+            }
         }
 }
