@@ -11,18 +11,21 @@ import com.jifelog.platform.core.domain.storage.application.port.out.GenerateUpl
 import com.jifelog.platform.core.domain.storage.application.port.out.LoadDiaryMediaPort
 import com.jifelog.platform.core.domain.storage.application.port.out.ObjectStat
 import com.jifelog.platform.core.domain.storage.application.port.out.SaveDiaryMediaPort
+import com.jifelog.platform.core.domain.storage.application.port.out.SoftDeleteDiaryMediaPort
 import com.jifelog.platform.core.domain.storage.application.port.out.StatObjectPort
 import com.jifelog.platform.core.domain.storage.model.DiaryMedia
 import com.jifelog.platform.core.domain.storage.model.FileMetadata
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.springframework.transaction.support.TransactionTemplate
+import java.util.UUID
 
 @Service
 class StorageService(
     private val generateUploadUrlPort: GenerateUploadUrlPort,
     private val saveDiaryMediaPort: SaveDiaryMediaPort,
     private val loadDiaryMediaPort: LoadDiaryMediaPort,
+    private val softDeleteDiaryMediaPort: SoftDeleteDiaryMediaPort,
     private val statObjectPort: StatObjectPort,
     private val minioProperties: MinioProperties,
     private val transactionTemplate: TransactionTemplate,
@@ -108,5 +111,13 @@ class StorageService(
         } catch (e: Exception) {
             throw BusinessException(ErrorCode.ES_03_001, cause = e)
         }
+    }
+
+    /**
+     * 일기 soft delete 시점에 같은 트랜잭션 안에서 호출된다.
+     * 별도 트랜잭션을 만들지 않으므로 일기/미디어 soft delete 가 함께 commit/rollback 된다.
+     */
+    override fun softDeleteMediaForDiary(diaryId: UUID) {
+        softDeleteDiaryMediaPort.softDeleteByDiaryId(diaryId)
     }
 }

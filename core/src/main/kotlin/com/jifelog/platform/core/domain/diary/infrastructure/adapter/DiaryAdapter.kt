@@ -7,6 +7,7 @@ import com.jifelog.platform.core.domain.diary.infrastructure.mapper.DiaryMapper
 import com.jifelog.platform.core.domain.diary.infrastructure.repository.DiaryJpaRepository
 import com.jifelog.platform.core.domain.diary.model.Diary
 import org.springframework.stereotype.Component
+import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
 
@@ -23,15 +24,20 @@ class DiaryAdapter(
         )
 
     override fun existsByUserInfoIdAndEntryDate(userInfoId: UUID, entryDate: LocalDate): Boolean =
-        diaryJpaRepository.existsByUserInfoIdAndEntryDate(userInfoId, entryDate)
+        diaryJpaRepository.existsByUserInfoIdAndEntryDateAndDeletedAtIsNull(userInfoId, entryDate)
 
     override fun loadDiary(id: UUID, userInfoId: UUID): Diary? =
-        diaryJpaRepository.findByIdAndUserInfoId(id, userInfoId)?.let(DiaryMapper::toDomain)
+        diaryJpaRepository.findByIdAndUserInfoIdAndDeletedAtIsNull(id, userInfoId)?.let(DiaryMapper::toDomain)
 
     override fun loadAllDiaries(userInfoId: UUID): List<Diary> =
-        diaryJpaRepository.findAllByUserInfoIdOrderByEntryDateDesc(userInfoId).map(DiaryMapper::toDomain)
+        diaryJpaRepository.findAllByUserInfoIdAndDeletedAtIsNullOrderByEntryDateDesc(userInfoId)
+            .map(DiaryMapper::toDomain)
 
-    override fun delete(diary: Diary) {
-        diaryJpaRepository.delete(DiaryMapper.toEntity(diary))
+    override fun softDelete(diary: Diary) {
+        diaryJpaRepository.softDeleteByIdAndUserInfoId(
+            id = diary.id,
+            userInfoId = diary.userInfoId,
+            now = Instant.now(),
+        )
     }
 }
