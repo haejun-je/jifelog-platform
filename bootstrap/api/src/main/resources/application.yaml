@@ -11,11 +11,6 @@ jifelog:
     jwt:
       secret: ${JIFELOG_JWT_SECRET}
 
-logging:
-  level:
-    org.springframework.web.filter.CommonsRequestLoggingFilter: DEBUG
-
-
 management:
   endpoint:
     health:
