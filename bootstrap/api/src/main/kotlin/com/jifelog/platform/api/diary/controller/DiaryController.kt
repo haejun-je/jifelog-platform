@@ -2,8 +2,10 @@ package com.jifelog.platform.api.diary.controller
 
 import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryCommandUseCase
 import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryListPreviewUseCase
+import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryQueryUseCase
 import com.jifelog.platform.api.diary.controller.dto.CreateDiaryRequest
 import com.jifelog.platform.api.diary.controller.dto.CreateDiaryResponse
+import com.jifelog.platform.api.diary.controller.dto.DiaryDetailResponse
 import com.jifelog.platform.api.diary.controller.dto.DiaryListItemResponse
 import com.jifelog.security.jwt.api.JifelogUser
 import com.jifelog.security.jwt.api.JifelogUserData
@@ -24,6 +26,7 @@ import java.util.UUID
 class DiaryController(
     private val diaryCommandUseCase: DiaryCommandUseCase,
     private val diaryListPreviewUseCase: DiaryListPreviewUseCase,
+    private val diaryQueryUseCase: DiaryQueryUseCase,
 ) {
 
     @PostMapping(version = "1")
@@ -55,5 +58,14 @@ class DiaryController(
     ): ResponseEntity<List<DiaryListItemResponse>> {
         val items = diaryListPreviewUseCase.getPreviews(UUID.fromString(jifelogUser.userId))
         return ResponseEntity.ok(items.map { DiaryListItemResponse.from(it) })
+    }
+
+    @GetMapping("/{id}", version = "1")
+    fun get(
+        @JifelogUser jifelogUser: JifelogUserData,
+        @PathVariable id: UUID,
+    ): ResponseEntity<DiaryDetailResponse> {
+        val diary = diaryQueryUseCase.getDiary(id, UUID.fromString(jifelogUser.userId))
+        return ResponseEntity.ok(DiaryDetailResponse.from(diary))
     }
 }
