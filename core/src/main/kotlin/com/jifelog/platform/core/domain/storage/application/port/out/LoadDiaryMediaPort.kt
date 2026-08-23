@@ -20,15 +20,8 @@ interface LoadDiaryMediaPort {
         status: DiaryMediaStatus,
     ): List<DiaryMedia>
 
-    /**
-     * 여러 diary 의 COMMITTED 미디어 전체를 `sort_order` 오름차순으로 일괄 조회한다 (N+1 회피).
-     *
-     * - 단건 조회 응답의 다건 presigned URL 발급에 사용된다.
-     * - 같은 일기 내에서는 `sort_order ASC` 순서대로 반환된다.
-     * - 사용처에서 diaryId 별로 groupBy 하여 매핑한다.
-     */
-    fun findAllCommittedByUserInfoIdAndDiaryIdsIn(
+    fun findAllCommittedByUserInfoIdAndDiaryId(
         userInfoId: UUID,
-        diaryIds: List<UUID>,
+        diaryId: UUID,
     ): List<DiaryMedia>
 }

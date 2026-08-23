@@ -48,15 +48,13 @@ class DiaryMediaAdapter(
             .map(DiaryMediaMapper::toDomain)
     }
 
-    override fun findAllCommittedByUserInfoIdAndDiaryIdsIn(
+    override fun findAllCommittedByUserInfoIdAndDiaryId(
         userInfoId: UUID,
-        diaryIds: List<UUID>,
+        diaryId: UUID,
     ): List<DiaryMedia> {
-        if (diaryIds.isEmpty()) return emptyList()
-        return diaryMediaJpaRepository
-            .findAllCommittedMediaByUserInfoIdAndDiaryIdsIn(
+        return diaryMediaJpaRepository.findAllCommittedMediaByUserInfoIdAndDiaryId(
                 userInfoId = userInfoId,
-                diaryIds = diaryIds,
+                diaryId = diaryId,
             )
             .map(DiaryMediaMapper::toDomain)
     }

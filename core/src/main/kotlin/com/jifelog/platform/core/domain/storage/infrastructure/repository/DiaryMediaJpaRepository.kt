@@ -49,15 +49,15 @@ interface DiaryMediaJpaRepository : JpaRepository<DiaryMediaEntity, UUID> {
         """
         SELECT m FROM DiaryMediaEntity m
         WHERE m.userInfoId = :userInfoId
-          AND m.diaryId IN :diaryIds
+          AND m.diaryId = :diaryId
           AND m.status = com.jifelog.platform.core.domain.storage.model.DiaryMediaStatus.COMMITTED
           AND m.deletedAt IS NULL
-        ORDER BY m.diaryId ASC, m.sortOrder ASC
+        ORDER BY m.sortOrder ASC
         """,
     )
-    fun findAllCommittedMediaByUserInfoIdAndDiaryIdsIn(
+    fun findAllCommittedMediaByUserInfoIdAndDiaryId(
         @Param("userInfoId") userInfoId: UUID,
-        @Param("diaryIds") diaryIds: List<UUID>,
+        @Param("diaryId") diaryId: UUID,
     ): List<DiaryMediaEntity>
 
     /**

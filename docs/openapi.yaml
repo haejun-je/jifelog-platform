@@ -349,6 +349,7 @@ paths:
         - 본인이 작성한 일기만 조회할 수 있습니다.
         - 존재하지 않는 일기 ID이거나 다른 사용자의 일기인 경우 404 Not Found 에러가 발생합니다.
         - 응답 본문은 도메인 모델과 동일한 필드를 노출하는 응답 전용 DTO(`DiaryDetailResponse`)입니다.
+        - 첨부 이미지 링크(`image_urls`)는 MinIO presigned GET URL 배열이며(`sort_order ASC` 순서), 만료: 서버 설정 `minio.presigned-url-expiry-minutes`, 기본 15분. 첨부 미디어가 없는 일기는 빈 배열 `[]` 입니다.
       tags: [Diary]
       parameters:
         - $ref: '#/components/parameters/ApiVersion'
@@ -377,6 +378,9 @@ paths:
                 regret:
                   - 운동을 못함
                 content: "오늘은 정말 좋은 하루였다."
+                image_urls:
+                  - "https://minio.jifelog.com:9000/diary-media/550e8400-e29b-41d4-a716-446655440000/2026-08-15/abc123.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=900&X-Amz-Signature=..."
+                  - "https://minio.jifelog.com:9000/diary-media/550e8400-e29b-41d4-a716-446655440000/2026-08-15/def456.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=900&X-Amz-Signature=..."
                 created_at: "2026-08-15T10:30:00Z"
                 updated_at: "2026-08-15T10:30:00Z"
         "404":

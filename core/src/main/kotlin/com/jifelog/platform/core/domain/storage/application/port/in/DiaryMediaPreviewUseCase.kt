@@ -23,8 +23,8 @@ interface DiaryMediaPreviewUseCase {
      *
      * @return diaryId -> presigned GET URL 목록. media 가 없는 diaryId 는 매핑에 포함되지 않는다.
      */
-    fun getPreviewListsByDiaryIds(
+    fun getPreviewByDiaryId(
         userInfoId: UUID,
-        diaryIds: List<UUID>,
-    ): Map<UUID, List<String>>
+        diaryId: UUID,
+    ): List<String>
 }
