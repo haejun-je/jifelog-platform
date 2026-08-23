@@ -91,6 +91,7 @@ class DiaryControllerTest {
             content = "c",
             createdAt = Instant.now(),
             updatedAt = Instant.now(),
+            deletedAt = null,
         )
         val presignedUrl = "https://minio.jifelog.com:9000/diary-media/foo.jpg?X-Amz-Signature=abc"
         Mockito.`when`(diaryListPreviewUseCase.getPreviews(userId))
@@ -135,6 +136,7 @@ class DiaryControllerTest {
             content = "c",
             createdAt = Instant.now(),
             updatedAt = Instant.now(),
+            deletedAt = null,
         )
         Mockito.`when`(diaryListPreviewUseCase.getPreviews(userId))
             .thenReturn(listOf(DiaryPreviewModel(diary, imageUrl = null)))
@@ -164,6 +166,7 @@ class DiaryControllerTest {
             content = "c",
             createdAt = Instant.parse("2026-08-15T10:30:00Z"),
             updatedAt = Instant.parse("2026-08-15T10:30:00Z"),
+            deletedAt = null,
         )
         Mockito.`when`(diaryQueryUseCase.getDiary(diaryId, userId)).thenReturn(diary)
 

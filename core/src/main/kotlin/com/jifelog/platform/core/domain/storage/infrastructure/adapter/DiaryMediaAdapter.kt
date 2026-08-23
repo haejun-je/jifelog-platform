@@ -2,17 +2,19 @@ package com.jifelog.platform.core.domain.storage.infrastructure.adapter
 
 import com.jifelog.platform.core.domain.storage.application.port.out.LoadDiaryMediaPort
 import com.jifelog.platform.core.domain.storage.application.port.out.SaveDiaryMediaPort
+import com.jifelog.platform.core.domain.storage.application.port.out.SoftDeleteDiaryMediaPort
 import com.jifelog.platform.core.domain.storage.infrastructure.mapper.DiaryMediaMapper
 import com.jifelog.platform.core.domain.storage.infrastructure.repository.DiaryMediaJpaRepository
 import com.jifelog.platform.core.domain.storage.model.DiaryMedia
 import com.jifelog.platform.core.domain.storage.model.DiaryMediaStatus
 import org.springframework.stereotype.Component
+import java.time.Instant
 import java.util.UUID
 
 @Component
 class DiaryMediaAdapter(
     private val diaryMediaJpaRepository: DiaryMediaJpaRepository,
-) : SaveDiaryMediaPort, LoadDiaryMediaPort {
+) : SaveDiaryMediaPort, LoadDiaryMediaPort, SoftDeleteDiaryMediaPort {
 
     override fun save(media: DiaryMedia): DiaryMedia =
         DiaryMediaMapper.toDomain(
@@ -24,7 +26,7 @@ class DiaryMediaAdapter(
         objectKeys: List<String>,
     ): List<DiaryMedia> =
         diaryMediaJpaRepository
-            .findAllByUserInfoIdAndObjectKeyInAndStatus(
+            .findAllByUserInfoIdAndObjectKeyInAndStatusAndDeletedAtIsNull(
                 userInfoId = userInfoId,
                 objectKeys = objectKeys,
                 status = DiaryMediaStatus.PENDING,
@@ -44,5 +46,9 @@ class DiaryMediaAdapter(
                 status = status,
             )
             .map(DiaryMediaMapper::toDomain)
+    }
+
+    override fun softDeleteByDiaryId(diaryId: UUID) {
+        diaryMediaJpaRepository.softDeleteByDiaryId(diaryId = diaryId, now = Instant.now())
     }
 }

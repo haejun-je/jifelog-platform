@@ -10,6 +10,12 @@ interface StorageUseCase {
      * COMMITTED 상태로 승격한다 (fk_diary_id, etag, file_size, mime_type, sort_order 갱신).
      */
     fun commitMediaForDiary(command: CommitDiaryMediaCommand)
+
+    /**
+     * 특정 diary 의 활성 미디어 전체를 soft delete 한다.
+     * 호출자(DiaryCommandService.delete) 의 트랜잭션에 합류한다.
+     */
+    fun softDeleteMediaForDiary(diaryId: UUID)
 }
 
 data class GenerateUploadUrlCommand(

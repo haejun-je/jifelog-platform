@@ -61,6 +61,9 @@ class DiaryCommandService(
         val diary = loadDiaryPort.loadDiary(id, userInfoId)
             ?: throw BusinessException(ErrorCode.EN_02_001)
 
-        deleteDiaryPort.delete(diary)
+        // 일기 soft delete → 미디어 soft delete 순서로 같은 트랜잭션에서 처리한다.
+        // (미디어 fk 가 일기를 가리키므로 일기 삭제 표시는 미디어보다 먼저 확정되어야 한다.)
+        deleteDiaryPort.softDelete(diary)
+        storageUseCase.softDeleteMediaForDiary(diary.id)
     }
 }
