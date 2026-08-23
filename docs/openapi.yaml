@@ -804,6 +804,7 @@ components:
         - content
         - created_at
         - updated_at
+        - image_url
       properties:
         id:
           type: string
@@ -869,6 +870,14 @@ components:
           type: string
           description: 일기 본문
           example: "오늘은 정말 좋은 하루였다."
+        image_url:
+          type: string
+          nullable: true
+          description: |
+            첨부 이미지 미리보기 링크.
+            MinIO 에 대해 발급된 presigned GET URL 이며, 만료 시간은 서버 설정 `minio.presigned-url-expiry-minutes` (기본 15분) 입니다.
+            첨부 미디어가 없는 일기는 `null` 입니다.
+          example: "https://minio.jifelog.com:9000/diary-media/550e8400-e29b-41d4-a716-446655440000/2026-08-15/abc123.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=900&X-Amz-Signature=..."
         created_at:
           type: string
           format: date-time

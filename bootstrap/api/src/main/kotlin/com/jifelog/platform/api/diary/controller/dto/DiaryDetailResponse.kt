@@ -1,6 +1,6 @@
 package com.jifelog.platform.api.diary.controller.dto
 
-import com.jifelog.platform.core.domain.diary.model.Diary
+import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryDetailModel
 import com.jifelog.platform.core.domain.diary.model.Mood
 import com.jifelog.platform.core.domain.diary.model.Weather
 import java.time.Instant
@@ -25,24 +25,29 @@ data class DiaryDetailResponse(
     val achievement: List<String>,
     val regret: List<String>,
     val content: String,
+    val imageUrl: String?,
     val createdAt: Instant,
     val updatedAt: Instant,
 ) {
     companion object {
-        fun from(diary: Diary): DiaryDetailResponse = DiaryDetailResponse(
-            id = diary.id,
-            userInfoId = diary.userInfoId,
-            entryDate = diary.entryDate,
-            mood = diary.mood,
-            weather = diary.weather,
-            energyLevel = diary.energyLevel,
-            satisfactionLevel = diary.satisfactionLevel,
-            keywords = diary.keywords,
-            achievement = diary.achievement,
-            regret = diary.regret,
-            content = diary.content,
-            createdAt = diary.createdAt,
-            updatedAt = diary.updatedAt,
-        )
+        fun from(model: DiaryDetailModel): DiaryDetailResponse {
+            val diary = model.diary
+            return DiaryDetailResponse(
+                id = diary.id,
+                userInfoId = diary.userInfoId,
+                entryDate = diary.entryDate,
+                mood = diary.mood,
+                weather = diary.weather,
+                energyLevel = diary.energyLevel,
+                satisfactionLevel = diary.satisfactionLevel,
+                keywords = diary.keywords,
+                achievement = diary.achievement,
+                regret = diary.regret,
+                content = diary.content,
+                imageUrl = model.imageUrl,
+                createdAt = diary.createdAt,
+                updatedAt = diary.updatedAt,
+            )
+        }
     }
 }

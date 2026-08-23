@@ -1,9 +1,10 @@
 package com.jifelog.platform.api.diary.controller
 
 import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryCommandUseCase
+import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryDetailModel
 import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryListPreviewUseCase
 import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryPreviewModel
-import com.jifelog.platform.core.domain.diary.application.port.`in`.DiaryQueryUseCase
+import com.jifelog.platform.core.domain.diary.application.port.`in`.GetDiaryDetailUseCase
 import com.jifelog.platform.core.domain.diary.model.Diary
 import com.jifelog.platform.core.domain.diary.model.Mood
 import com.jifelog.platform.core.domain.diary.model.Weather
@@ -46,7 +47,7 @@ class DiaryControllerTest {
     private lateinit var diaryListPreviewUseCase: DiaryListPreviewUseCase
 
     @MockitoBean
-    private lateinit var diaryQueryUseCase: DiaryQueryUseCase
+    private lateinit var getDiaryDetailUseCase: GetDiaryDetailUseCase
 
     @Autowired
     private lateinit var mockMvc: MockMvc
@@ -168,7 +169,8 @@ class DiaryControllerTest {
             updatedAt = Instant.parse("2026-08-15T10:30:00Z"),
             deletedAt = null,
         )
-        Mockito.`when`(diaryQueryUseCase.getDiary(diaryId, userId)).thenReturn(diary)
+        Mockito.`when`(getDiaryDetailUseCase.getDetail(diaryId, userId))
+            .thenReturn(DiaryDetailModel(diary = diary, imageUrl = null))
 
         mockMvc.perform(get("/api/v1/diaries/{id}", diaryId))
             .andExpect(status().isOk)
@@ -186,5 +188,35 @@ class DiaryControllerTest {
             .andExpect(jsonPath("$.content").value("c"))
             .andExpect(jsonPath("$.created_at").value("2026-08-15T10:30:00Z"))
             .andExpect(jsonPath("$.updated_at").value("2026-08-15T10:30:00Z"))
+            .andExpect(jsonPath("$.image_url").value(org.hamcrest.Matchers.nullValue()))
+    }
+
+    @Test
+    fun `GET diaries by id returns image_url when diary has media`() {
+        val diaryId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000")
+        val diary = Diary.withId(
+            id = diaryId,
+            userInfoId = userId,
+            entryDate = LocalDate.of(2026, 8, 15),
+            mood = Mood.HAPPY,
+            weather = Weather.SUNNY,
+            energyLevel = 4,
+            satisfactionLevel = 5,
+            keywords = listOf("a"),
+            achievement = emptyList(),
+            regret = emptyList(),
+            content = "c",
+            createdAt = Instant.parse("2026-08-15T10:30:00Z"),
+            updatedAt = Instant.parse("2026-08-15T10:30:00Z"),
+            deletedAt = null,
+        )
+        val presignedUrl = "https://minio.jifelog.com:9000/diary-media/foo.jpg?X-Amz-Signature=abc"
+        Mockito.`when`(getDiaryDetailUseCase.getDetail(diaryId, userId))
+            .thenReturn(DiaryDetailModel(diary = diary, imageUrl = presignedUrl))
+
+        mockMvc.perform(get("/api/v1/diaries/{id}", diaryId))
+            .andExpect(status().isOk)
+            .andExpect(jsonPath("$.id").value("550e8400-e29b-41d4-a716-446655440000"))
+            .andExpect(jsonPath("$.image_url").value(presignedUrl))
     }
 }
