@@ -50,4 +50,40 @@ class DiaryMediaPreviewService(
             )
         }
     }
+
+    /**
+     * 여러 diary 의 COMMITTED 미디어 전체에 대한 presigned GET URL 을
+     * `sort_order ASC` 순서로 발급해 diaryId 별 리스트로 묶어 반환한다.
+     *
+     * - N+1 회피: 미디어 전체를 1회 조회한 뒤 diaryId 별로 groupBy 한다.
+     * - presigned URL 자체는 만료 시점이 짧으므로 캐시하지 않는다.
+     * - 정렬은 리포지토리에서 `(diary_id ASC, sort_order ASC)` 로 보장된다.
+     */
+    @Transactional(readOnly = true)
+    override fun getPreviewListsByDiaryIds(
+        userInfoId: UUID,
+        diaryIds: List<UUID>,
+    ): Map<UUID, List<String>> {
+        if (diaryIds.isEmpty()) return emptyMap()
+
+        val medias = loadDiaryMediaPort.findAllCommittedByUserInfoIdAndDiaryIdsIn(
+            userInfoId = userInfoId,
+            diaryIds = diaryIds,
+        )
+
+        return medias
+            .groupBy { media ->
+                requireNotNull(media.diaryId) {
+                    "COMMITTED media must have diaryId: mediaId=${media.id}"
+                }
+            }
+            .mapValues { (_, list) ->
+                list.map { media ->
+                    generateDownloadUrlPort.presignGetObject(
+                        bucketName = media.bucketName,
+                        objectKey = media.objectKey,
+                    )
+                }
+            }
+    }
 }

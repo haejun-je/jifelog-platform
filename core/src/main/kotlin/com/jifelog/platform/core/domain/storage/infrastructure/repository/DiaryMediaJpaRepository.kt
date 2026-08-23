@@ -39,6 +39,28 @@ interface DiaryMediaJpaRepository : JpaRepository<DiaryMediaEntity, UUID> {
     ): List<DiaryMediaEntity>
 
     /**
+     * 여러 diary 의 COMMITTED 활성 미디어 전체를 `sort_order` 오름차순으로 일괄 조회한다.
+     *
+     * - 단건 조회 응답의 다건 presigned URL 발급에 사용된다.
+     * - 정렬은 `diary_id ASC, sort_order ASC` 이며, 같은 일기 내에서는 sort_order 순서대로 반환된다.
+     * - 사용처에서 diaryId 별로 groupBy 하여 `Map<UUID, List<DiaryMedia>>` 형태로 가공한다.
+     */
+    @Query(
+        """
+        SELECT m FROM DiaryMediaEntity m
+        WHERE m.userInfoId = :userInfoId
+          AND m.diaryId IN :diaryIds
+          AND m.status = com.jifelog.platform.core.domain.storage.model.DiaryMediaStatus.COMMITTED
+          AND m.deletedAt IS NULL
+        ORDER BY m.diaryId ASC, m.sortOrder ASC
+        """,
+    )
+    fun findAllCommittedMediaByUserInfoIdAndDiaryIdsIn(
+        @Param("userInfoId") userInfoId: UUID,
+        @Param("diaryIds") diaryIds: List<UUID>,
+    ): List<DiaryMediaEntity>
+
+    /**
      * 특정 diary 의 활성(deleted_at IS NULL) 미디어 전체를 soft delete 처리한다.
      * 일기 soft delete 시 같은 트랜잭션에서 호출된다.
      */

@@ -25,7 +25,7 @@ data class DiaryDetailResponse(
     val achievement: List<String>,
     val regret: List<String>,
     val content: String,
-    val imageUrl: String?,
+    val imageUrls: List<String>,
     val createdAt: Instant,
     val updatedAt: Instant,
 ) {
@@ -44,7 +44,7 @@ data class DiaryDetailResponse(
                 achievement = diary.achievement,
                 regret = diary.regret,
                 content = diary.content,
-                imageUrl = model.imageUrl,
+                imageUrls = model.imageUrls,
                 createdAt = diary.createdAt,
                 updatedAt = diary.updatedAt,
             )
