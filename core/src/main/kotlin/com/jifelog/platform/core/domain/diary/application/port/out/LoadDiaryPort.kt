@@ -4,6 +4,6 @@ import com.jifelog.platform.core.domain.diary.model.Diary
 import java.util.UUID
 
 interface LoadDiaryPort {
-    fun loadDiary(id: UUID): Diary?
+    fun loadDiary(id: UUID, userInfoId: UUID): Diary?
     fun loadAllDiaries(userInfoId: UUID): List<Diary>
 }
