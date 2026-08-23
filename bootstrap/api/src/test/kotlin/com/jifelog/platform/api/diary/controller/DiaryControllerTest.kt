@@ -170,7 +170,7 @@ class DiaryControllerTest {
             deletedAt = null,
         )
         Mockito.`when`(getDiaryDetailUseCase.getDetail(diaryId, userId))
-            .thenReturn(DiaryDetailModel(diary = diary, imageUrl = null))
+            .thenReturn(DiaryDetailModel(diary = diary, imageUrls = emptyList()))
 
         mockMvc.perform(get("/api/v1/diaries/{id}", diaryId))
             .andExpect(status().isOk)
@@ -188,11 +188,12 @@ class DiaryControllerTest {
             .andExpect(jsonPath("$.content").value("c"))
             .andExpect(jsonPath("$.created_at").value("2026-08-15T10:30:00Z"))
             .andExpect(jsonPath("$.updated_at").value("2026-08-15T10:30:00Z"))
-            .andExpect(jsonPath("$.image_url").value(org.hamcrest.Matchers.nullValue()))
+            .andExpect(jsonPath("$.image_urls").isArray)
+            .andExpect(jsonPath("$.image_urls.length()").value(0))
     }
 
     @Test
-    fun `GET diaries by id returns image_url when diary has media`() {
+    fun `GET diaries by id returns image_urls in sort_order when diary has multiple media`() {
         val diaryId = UUID.fromString("550e8400-e29b-41d4-a716-446655440000")
         val diary = Diary.withId(
             id = diaryId,
@@ -210,13 +211,17 @@ class DiaryControllerTest {
             updatedAt = Instant.parse("2026-08-15T10:30:00Z"),
             deletedAt = null,
         )
-        val presignedUrl = "https://minio.jifelog.com:9000/diary-media/foo.jpg?X-Amz-Signature=abc"
+        val presignedUrl1 = "https://minio.jifelog.com:9000/diary-media/foo-1.jpg?X-Amz-Signature=abc"
+        val presignedUrl2 = "https://minio.jifelog.com:9000/diary-media/foo-2.jpg?X-Amz-Signature=def"
         Mockito.`when`(getDiaryDetailUseCase.getDetail(diaryId, userId))
-            .thenReturn(DiaryDetailModel(diary = diary, imageUrl = presignedUrl))
+            .thenReturn(DiaryDetailModel(diary = diary, imageUrls = listOf(presignedUrl1, presignedUrl2)))
 
         mockMvc.perform(get("/api/v1/diaries/{id}", diaryId))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.id").value("550e8400-e29b-41d4-a716-446655440000"))
-            .andExpect(jsonPath("$.image_url").value(presignedUrl))
+            .andExpect(jsonPath("$.image_urls").isArray)
+            .andExpect(jsonPath("$.image_urls.length()").value(2))
+            .andExpect(jsonPath("$.image_urls[0]").value(presignedUrl1))
+            .andExpect(jsonPath("$.image_urls[1]").value(presignedUrl2))
     }
 }

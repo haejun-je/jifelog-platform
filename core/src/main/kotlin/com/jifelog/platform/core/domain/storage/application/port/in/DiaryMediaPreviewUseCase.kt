@@ -16,4 +16,15 @@ interface DiaryMediaPreviewUseCase {
         userInfoId: UUID,
         diaryIds: List<UUID>,
     ): Map<UUID, String>
+
+    /**
+     * 단건 조회 응답용: 여러 diary 의 COMMITTED 미디어 전체에 대한 presigned GET URL 을
+     * `sort_order ASC` 순서대로 발급해 diaryId 별 리스트로 반환한다.
+     *
+     * @return diaryId -> presigned GET URL 목록. media 가 없는 diaryId 는 매핑에 포함되지 않는다.
+     */
+    fun getPreviewByDiaryId(
+        userInfoId: UUID,
+        diaryId: UUID,
+    ): List<String>
 }

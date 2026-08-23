@@ -11,12 +11,17 @@ interface LoadDiaryMediaPort {
     ): List<DiaryMedia>
 
     /**
-     * 여러 diary 의 COMMITTED 미디어를 일괄 조회한다 (N+1 회피).
-     * 결과는 (diary_id ASC, sort_order ASC) 로 정렬되어 반환된다.
+     * 여러 diary 의 미리보기 미디어(sort_order = 0, status 일치) 를 일괄 조회한다.
+     * 결과 정렬은 사용처에 영향을 주지 않으므로 두지 않는다.
      */
     fun findAllByUserInfoIdAndDiaryIdsInAndStatus(
         userInfoId: UUID,
         diaryIds: List<UUID>,
         status: DiaryMediaStatus,
+    ): List<DiaryMedia>
+
+    fun findAllCommittedByUserInfoIdAndDiaryId(
+        userInfoId: UUID,
+        diaryId: UUID,
     ): List<DiaryMedia>
 }

@@ -48,6 +48,17 @@ class DiaryMediaAdapter(
             .map(DiaryMediaMapper::toDomain)
     }
 
+    override fun findAllCommittedByUserInfoIdAndDiaryId(
+        userInfoId: UUID,
+        diaryId: UUID,
+    ): List<DiaryMedia> {
+        return diaryMediaJpaRepository.findAllCommittedMediaByUserInfoIdAndDiaryId(
+                userInfoId = userInfoId,
+                diaryId = diaryId,
+            )
+            .map(DiaryMediaMapper::toDomain)
+    }
+
     override fun softDeleteByDiaryId(diaryId: UUID) {
         diaryMediaJpaRepository.softDeleteByDiaryId(diaryId = diaryId, now = Instant.now())
     }

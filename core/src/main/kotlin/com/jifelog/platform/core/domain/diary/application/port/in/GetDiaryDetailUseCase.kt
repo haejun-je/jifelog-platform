@@ -7,12 +7,13 @@ import java.util.UUID
  * 일기 상세 조회 응답용 view model.
  *
  * 도메인 모델 [Diary] 와 별개의 "응답 전용" 객체.
- * - media 가 없는 일기는 [imageUrl] 이 `null` 이다.
+ * - [imageUrls] 는 `sort_order ASC` 순서대로 발급된 presigned GET URL 목록이다.
+ * - media 가 없는 일기는 [imageUrls] 가 빈 리스트이다 (`null` 아님).
  * - controller 의 응답 DTO 변환 입력으로만 사용되며, 도메인 로직에 노출되지 않는다.
  */
 data class DiaryDetailModel(
     val diary: Diary,
-    val imageUrl: String?,
+    val imageUrls: List<String>,
 )
 
 /**

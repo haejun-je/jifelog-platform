@@ -50,4 +50,22 @@ class DiaryMediaPreviewService(
             )
         }
     }
+
+    @Transactional(readOnly = true)
+    override fun getPreviewByDiaryId(
+        userInfoId: UUID,
+        diaryId: UUID
+    ): List<String> {
+        val medias = loadDiaryMediaPort.findAllCommittedByUserInfoIdAndDiaryId(
+            userInfoId = userInfoId,
+            diaryId = diaryId,
+        )
+
+        return medias.map { media ->
+            generateDownloadUrlPort.presignGetObject(
+                bucketName = media.bucketName,
+                objectKey = media.objectKey,
+            )
+        }
+    }
 }
