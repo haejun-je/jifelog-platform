@@ -31,7 +31,7 @@ class DiaryAdapter(
     override fun loadAllDiaries(userInfoId: UUID): List<Diary> =
         diaryJpaRepository.findAllByUserInfoIdOrderByEntryDateDesc(userInfoId).map(DiaryMapper::toDomain)
 
-    override fun deleteById(id: UUID) {
-        diaryJpaRepository.deleteById(id)
+    override fun delete(diary: Diary) {
+        diaryJpaRepository.delete(DiaryMapper.toEntity(diary))
     }
 }

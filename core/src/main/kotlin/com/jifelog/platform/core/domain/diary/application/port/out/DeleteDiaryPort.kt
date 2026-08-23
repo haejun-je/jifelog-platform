@@ -1,7 +1,7 @@
 package com.jifelog.platform.core.domain.diary.application.port.out
 
-import java.util.UUID
+import com.jifelog.platform.core.domain.diary.model.Diary
 
 interface DeleteDiaryPort {
-    fun deleteById(id: UUID)
+    fun delete(diary: Diary)
 }
