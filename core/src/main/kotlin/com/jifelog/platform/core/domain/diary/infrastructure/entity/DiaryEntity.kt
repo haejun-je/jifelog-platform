@@ -8,7 +8,6 @@ import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
 import jakarta.persistence.Id
 import jakarta.persistence.Table
-import jakarta.persistence.UniqueConstraint
 import org.hibernate.annotations.JdbcTypeCode
 import org.hibernate.type.SqlTypes
 import java.time.Instant
@@ -19,12 +18,6 @@ import java.util.*
 @Table(
     schema = "diary",
     name = "diary_entry",
-    uniqueConstraints = [
-        UniqueConstraint(
-            name = "uq_user_entry_date",
-            columnNames = ["user_info_id", "entry_date"],
-        ),
-    ],
 )
 class DiaryEntity(
     @Id
@@ -70,4 +63,7 @@ class DiaryEntity(
 
     @Column(name = "updated_at", nullable = false)
     var updatedAt: Instant,
+
+    @Column(name = "deleted_at", nullable = true)
+    var deletedAt: Instant?,
 )

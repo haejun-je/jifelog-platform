@@ -18,6 +18,7 @@ object DiaryMapper {
         content = diary.content,
         createdAt = diary.createdAt,
         updatedAt = diary.updatedAt,
+        deletedAt = diary.deletedAt,
     )
 
     fun toDomain(entity: DiaryEntity): Diary = Diary.withId(
@@ -34,5 +35,6 @@ object DiaryMapper {
         content = entity.content,
         createdAt = entity.createdAt,
         updatedAt = entity.updatedAt,
+        deletedAt = entity.deletedAt,
     )
 }

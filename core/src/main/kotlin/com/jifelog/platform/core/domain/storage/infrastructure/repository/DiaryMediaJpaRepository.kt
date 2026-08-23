@@ -3,12 +3,14 @@ package com.jifelog.platform.core.domain.storage.infrastructure.repository
 import com.jifelog.platform.core.domain.storage.infrastructure.entity.DiaryMediaEntity
 import com.jifelog.platform.core.domain.storage.model.DiaryMediaStatus
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import java.time.Instant
 import java.util.UUID
 
 interface DiaryMediaJpaRepository : JpaRepository<DiaryMediaEntity, UUID> {
-    fun findAllByUserInfoIdAndObjectKeyInAndStatus(
+    fun findAllByUserInfoIdAndObjectKeyInAndStatusAndDeletedAtIsNull(
         userInfoId: UUID,
         objectKeys: List<String>,
         status: DiaryMediaStatus,
@@ -27,6 +29,7 @@ interface DiaryMediaJpaRepository : JpaRepository<DiaryMediaEntity, UUID> {
           AND m.diaryId IN :diaryIds
           AND m.status = :status
           AND m.sortOrder = 0
+          AND m.deletedAt IS NULL
         """,
     )
     fun findPreviewMediaByUserInfoIdAndDiaryIdsInAndStatus(
@@ -34,4 +37,22 @@ interface DiaryMediaJpaRepository : JpaRepository<DiaryMediaEntity, UUID> {
         @Param("diaryIds") diaryIds: List<UUID>,
         @Param("status") status: DiaryMediaStatus,
     ): List<DiaryMediaEntity>
+
+    /**
+     * 특정 diary 의 활성(deleted_at IS NULL) 미디어 전체를 soft delete 처리한다.
+     * 일기 soft delete 시 같은 트랜잭션에서 호출된다.
+     */
+    @Modifying
+    @Query(
+        """
+        UPDATE DiaryMediaEntity m
+        SET m.deletedAt = :now
+        WHERE m.diaryId = :diaryId
+          AND m.deletedAt IS NULL
+        """,
+    )
+    fun softDeleteByDiaryId(
+        @Param("diaryId") diaryId: UUID,
+        @Param("now") now: Instant,
+    ): Int
 }

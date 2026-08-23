@@ -19,6 +19,7 @@ class Diary(
     val content: String,
     val createdAt: Instant,
     val updatedAt: Instant,
+    val deletedAt: Instant? = null,
 ) {
     companion object {
         fun withoutId(
@@ -46,6 +47,7 @@ class Diary(
             content = content,
             createdAt = Instant.now(),
             updatedAt = Instant.now(),
+            deletedAt = null,
         )
 
         fun withId(
@@ -62,6 +64,7 @@ class Diary(
             content: String,
             createdAt: Instant,
             updatedAt: Instant,
+            deletedAt: Instant?,
         ): Diary = Diary(
             id = id,
             userInfoId = userInfoId,
@@ -76,6 +79,7 @@ class Diary(
             content = content,
             createdAt = createdAt,
             updatedAt = updatedAt,
+            deletedAt = deletedAt,
         )
     }
 }
