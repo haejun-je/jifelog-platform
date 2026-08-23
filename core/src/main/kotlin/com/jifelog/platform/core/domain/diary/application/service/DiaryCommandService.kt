@@ -58,10 +58,9 @@ class DiaryCommandService(
 
     @Transactional
     override fun delete(id: UUID, userInfoId: UUID) {
-        if (loadDiaryPort.loadDiary(id, userInfoId) == null) {
-            throw BusinessException(ErrorCode.EN_02_001)
-        }
+        val diary = loadDiaryPort.loadDiary(id, userInfoId)
+            ?: throw BusinessException(ErrorCode.EN_02_001)
 
-        deleteDiaryPort.deleteById(id)
+        deleteDiaryPort.delete(diary)
     }
 }
