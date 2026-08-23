@@ -106,9 +106,11 @@ class DiaryQueryServiceTest {
         var lastUserInfoId: UUID? = null
         var lastLoadId: UUID? = null
 
-        override fun loadDiary(id: UUID): Diary? {
+        override fun loadDiary(id: UUID, userInfoId: UUID): Diary? {
             lastLoadId = id
-            return loadByIdResult
+            lastUserInfoId = userInfoId
+            // adapter 가 owner 조건을 포함해 조회하는 시맨틱을 모킹한다.
+            return loadByIdResult?.takeIf { it.userInfoId == userInfoId }
         }
 
         override fun loadAllDiaries(userInfoId: UUID): List<Diary> {

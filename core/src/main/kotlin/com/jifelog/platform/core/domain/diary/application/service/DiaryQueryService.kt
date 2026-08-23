@@ -19,14 +19,7 @@ class DiaryQueryService(
         loadDiaryPort.loadAllDiaries(userInfoId)
 
     @Transactional(readOnly = true)
-    override fun getDiary(id: UUID, userInfoId: UUID): Diary {
-        val diary = loadDiaryPort.loadDiary(id)
+    override fun getDiary(id: UUID, userInfoId: UUID): Diary =
+        loadDiaryPort.loadDiary(id, userInfoId)
             ?: throw BusinessException(ErrorCode.EN_02_001)
-
-        if (diary.userInfoId != userInfoId) {
-            throw BusinessException(ErrorCode.EN_02_001)
-        }
-
-        return diary
-    }
 }

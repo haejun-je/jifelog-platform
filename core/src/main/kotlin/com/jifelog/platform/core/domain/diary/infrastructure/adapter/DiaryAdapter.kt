@@ -25,8 +25,8 @@ class DiaryAdapter(
     override fun existsByUserInfoIdAndEntryDate(userInfoId: UUID, entryDate: LocalDate): Boolean =
         diaryJpaRepository.existsByUserInfoIdAndEntryDate(userInfoId, entryDate)
 
-    override fun loadDiary(id: UUID): Diary? =
-        diaryJpaRepository.findById(id).map(DiaryMapper::toDomain).orElse(null)
+    override fun loadDiary(id: UUID, userInfoId: UUID): Diary? =
+        diaryJpaRepository.findByIdAndUserInfoId(id, userInfoId)?.let(DiaryMapper::toDomain)
 
     override fun loadAllDiaries(userInfoId: UUID): List<Diary> =
         diaryJpaRepository.findAllByUserInfoIdOrderByEntryDateDesc(userInfoId).map(DiaryMapper::toDomain)
